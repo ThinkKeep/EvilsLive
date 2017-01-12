@@ -1,6 +1,6 @@
 language: android
 jdk: oraclejdk8
-sudo: false
+sudo: required
 
 android:
   components:
@@ -15,6 +15,11 @@ android:
 before_install:
   - git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk-root
   - export ANDROID_NDK_HOME=$HOME/android-ndk-root
+  - mkdir android
+  - ANDROID_HOME=android && export ANDROID_HOME
+  - wget https://github.com/Commit451/android-cmake-installer/releases/download/1.1.0/install-cmake.sh
+  - chmod +x install-cmake.sh
+  - ./install-cmake.sh -d -v 3.6.3155560 -p linux
   
 before_script:
   # Create and start emulator
