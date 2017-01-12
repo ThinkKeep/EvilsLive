@@ -13,9 +13,9 @@ android:
     - extra-android-m2repository
 
 before_install:
-    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-    - sudo apt-get update
-    - sudo apt-get install libstdc++6
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get update
+  - sudo apt-get install libstdc++6
   - git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk-root
   - export ANDROID_NDK_HOME=$HOME/android-ndk-root
   - wget https://github.com/Commit451/android-cmake-installer/releases/download/1.1.0/install-cmake.sh
