@@ -1,3 +1,0 @@
-/Users/jsson/project/github/thinkkeep/evils/android/app/.externalNativeBuild/cmake/debug/armeabi/CMakeFiles/edit_cache.dir
-/Users/jsson/project/github/thinkkeep/evils/android/app/.externalNativeBuild/cmake/debug/armeabi/CMakeFiles/rebuild_cache.dir
-/Users/jsson/project/github/thinkkeep/evils/android/app/.externalNativeBuild/cmake/debug/armeabi/CMakeFiles/native-lib.dir
