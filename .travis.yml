@@ -4,6 +4,7 @@ sudo: required
 
 android:
   components:
+    - tools
     - platform-tools
     - tools
     - build-tools-25.0.2
