@@ -13,12 +13,12 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags ""
+                arguments '-DANDROID_TOOLCHAIN=clang'
             }
         }
 
         ndk {
-//            abiFilters "armeabi", "armeabi-v7a"
+            abiFilters 'x86', 'x86_64', 'armeabi', 'armeabi-v7a', 'arm64-v8a'
         }
     }
     
