@@ -24,8 +24,11 @@ before_install:
   - sudo apt-get install libstdc++6
   - git clone --depth=1 https://github.com/urho3d/android-ndk.git $HOME/android-ndk-root;
       export ANDROID_NDK_HOME=$HOME/android-ndk-root;
-      git clone --depth=1 https://github.com/taka-no-me/android-cmake.git $HOME/android-cmake;
-      export TOOLCHAIN_PATH=$HOME/android-cmake/android.toolchain.cmake;
+      #git clone --depth=1 https://github.com/taka-no-me/android-cmake.git $HOME/android-cmake;
+      #export TOOLCHAIN_PATH=$HOME/android-cmake/android.toolchain.cmake;
+  - wget https://github.com/Commit451/android-cmake-installer/releases/download/1.1.0/install-cmake.sh;
+      chmod +x install-cmake.sh;
+      ./install-cmake.sh;
   
 before_script:
   # Create and start emulator
