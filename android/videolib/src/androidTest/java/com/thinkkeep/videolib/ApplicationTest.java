@@ -1,4 +1,4 @@
-package com.thinkkeep.evils;
+package com.thinkkeep.videolib;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

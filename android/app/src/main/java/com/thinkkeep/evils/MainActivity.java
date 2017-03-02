@@ -2,9 +2,8 @@ package com.thinkkeep.evils;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -12,9 +11,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+
+import com.thinkkeep.evils.di.component.ActivityComponent;
+import com.thinkkeep.evils.di.component.DaggerActivityComponent;
+import com.thinkkeep.evils.di.modules.ActivityModule;
+import com.thinkkeep.videolib.jni.EvilsJni;
+import com.thinkkeep.videolib.model.CameraSupport;
+
+import javax.inject.Inject;
+
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    @Inject
+    CameraSupport cameraSupport;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +52,13 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        ActivityComponent activityComponent = DaggerActivityComponent.builder()
+                .activityModule(new ActivityModule(this)).build();
+        activityComponent.getActivity();
+
+//        CameraComponent cameraComponent = DaggerCameraComponent.builder().activityComponent(activityComponent).
+//                cameraModule(new com.thinkkeep.videolib.di.modules.CameraModule(this)).build();
+//        cameraComponent.inject(this);
     }
 
     @Override
@@ -82,6 +101,7 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_camera) {
             // Handle the camera action
+            Snackbar.make(getCurrentFocus(), EvilsJni.testJni(), 10000).show();
         } else if (id == R.id.nav_gallery) {
 
         } else if (id == R.id.nav_slideshow) {

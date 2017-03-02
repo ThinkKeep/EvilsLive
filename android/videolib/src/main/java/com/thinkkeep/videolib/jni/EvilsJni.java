@@ -1,4 +1,4 @@
-package com.thinkkeep.evils.jni;
+package com.thinkkeep.videolib.jni;
 
 /**
  * Created by jsson on 17/1/12.
