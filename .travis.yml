@@ -37,4 +37,4 @@ before_script:
   #- android-wait-for-emulator
   #- adb shell input keyevent 82 &
 
-script: cd android && ./gradlew build
+script: cd android && ./gradlew clean build
