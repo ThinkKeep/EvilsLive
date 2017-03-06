@@ -3,7 +3,8 @@ package com.thinkkeep.videolib.model;
 import android.hardware.Camera;
 
 /**
- * Created by jsson on 17/2/27.
+ * API < 23 的调用类
+ * Created by jason on 17/2/27.
  */
 
 @SuppressWarnings("deprecation")

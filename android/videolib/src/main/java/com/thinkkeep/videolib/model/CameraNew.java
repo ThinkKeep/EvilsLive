@@ -13,7 +13,8 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 
 /**
- * Created by jsson on 17/2/27.
+ * API > 23 调用类
+ * Created by jason on 17/2/27.
  */
 
 public class CameraNew implements CameraSupport {
