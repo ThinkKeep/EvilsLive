@@ -3,3 +3,8 @@
 ![](https://travis-ci.org/ThinkKeep/evils.svg?branch=master)
 
 
+## Copyright and License
+Copyright 2016-2017 ThinkKeep
+
+
+Code released under the MIT License.
