@@ -8,9 +8,13 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.opengl.GLSurfaceView;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
+
+import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
 
 /**
  * API > 23 调用类
@@ -23,6 +27,7 @@ public class CameraNew implements CameraSupport {
     private CameraDevice camera;
     private CameraManager manager;
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public CameraNew(final Context context) {
         this.context = context;
         this.manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
@@ -40,18 +45,18 @@ public class CameraNew implements CameraSupport {
             }
             manager.openCamera(cameraIds[cameraId], new CameraDevice.StateCallback() {
                 @Override
-                public void onOpened(CameraDevice camera) {
+                public void onOpened(@NonNull CameraDevice camera) {
                     CameraNew.this.camera = camera;
                 }
 
                 @Override
-                public void onDisconnected(CameraDevice camera) {
+                public void onDisconnected(@NonNull CameraDevice camera) {
                     CameraNew.this.camera = camera;
                     // TODO handle
                 }
 
                 @Override
-                public void onError(CameraDevice camera, int error) {
+                public void onError(@NonNull CameraDevice camera, int error) {
                     CameraNew.this.camera = camera;
                     // TODO handle
                 }
@@ -73,5 +78,20 @@ public class CameraNew implements CameraSupport {
             // TODO handle
             return 0;
         }
+    }
+
+    @Override
+    public void setDisplayPreview(GLSurfaceView surfaceView) {
+
+    }
+
+    @Override
+    public void setOnPreviewFrameListener(OnPreviewFrameListener listener) {
+
+    }
+
+    @Override
+    public void setStreamConfig(EvilsLiveStreamerConfig config) {
+
     }
 }

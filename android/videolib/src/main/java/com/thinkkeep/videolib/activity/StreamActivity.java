@@ -19,12 +19,13 @@ public class StreamActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stream);
 
-        CameraComponent cameraComponent = CameraComponent.Initializer.init(this);
+//        CameraComponent cameraComponent = CameraComponent.Initializer.init(this);
 //
-        cameraComponent.inject(this);
+//        cameraComponent.inject(this);
     }
 
-    private void initCameara() {
+    private void initCameara(int cameraId) {
+        CameraSupport camera = this.cameraSupport.open(cameraId);
 
     }
 }
