@@ -2,9 +2,8 @@ package com.thinkkeep.videolib.di.component;
 
 import android.content.Context;
 
-import com.thinkkeep.videolib.activity.StreamActivity;
+import com.thinkkeep.videolib.api.EvilsLiveStreamer;
 import com.thinkkeep.videolib.di.modules.CameraModule;
-import com.thinkkeep.videolib.di.component.DaggerCameraComponent;
 
 import dagger.Component;
 
@@ -13,7 +12,7 @@ import dagger.Component;
  */
 @Component(modules = CameraModule.class)
 public interface CameraComponent {
-    void inject(StreamActivity streamActivity);
+    void inject(EvilsLiveStreamer streamer);
 
     final class Initializer {
         private Initializer() {
