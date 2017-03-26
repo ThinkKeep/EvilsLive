@@ -1,7 +1,7 @@
 package com.thinkkeep.videolib.api;
 
 /**
- * Created by jsson on 17/3/16.
+ * Created by jason on 17/3/16.
  */
 
 public class EvilsLiveStreamerConfig {
@@ -18,19 +18,19 @@ public class EvilsLiveStreamerConfig {
         E720P(1080, 720),
         ;
         private final int width;
-        private final int heigth;
+        private final int height;
 
         public int getWidth() {
             return width;
         }
 
-        public int getHeigth() {
-            return heigth;
+        public int getHeight() {
+            return height;
         }
 
-        EVIDEO_RESOLUTION(int width, int heigth) {
+        EVIDEO_RESOLUTION(int width, int height) {
             this.width = width;
-            this.heigth = heigth;
+            this.height = height;
         }
     }
 
@@ -101,7 +101,7 @@ public class EvilsLiveStreamerConfig {
      * 获取视频分辨率
      * @return resolution
      */
-    public EVIDEO_RESOLUTION getVideoresolution() {
+    public EVIDEO_RESOLUTION getVideoResolution() {
         return videoresolution;
     }
 
@@ -156,16 +156,25 @@ public class EvilsLiveStreamerConfig {
         }
 
 
-        public Builder newBuilder() {
+        public static Builder newBuilder() {
             return DEFAULT_INSTANCE.toBuilder();
         }
 
         public EvilsLiveStreamerConfig build() {
             return new EvilsLiveStreamerConfig(this);
         }
+
+        public Builder mergeFrom(EvilsLiveStreamerConfig config) {
+            return null;
+        }
     }
 
     private Builder toBuilder() {
-        return new Builder();
+//        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        Builder builder = new Builder();
+        builder.streamUrl = DEFAULT_INSTANCE.streamUrl;
+        builder.encodeMethod = DEFAULT_INSTANCE.encodeMethod;
+        builder.videoresolution = DEFAULT_INSTANCE.videoresolution;
+        return builder;
     }
 }

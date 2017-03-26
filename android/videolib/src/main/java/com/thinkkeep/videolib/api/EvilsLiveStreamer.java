@@ -2,6 +2,7 @@ package com.thinkkeep.videolib.api;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.view.SurfaceView;
 
 import com.thinkkeep.videolib.di.component.CameraComponent;
 import com.thinkkeep.videolib.model.CameraSupport;
@@ -26,13 +27,18 @@ public class EvilsLiveStreamer {
         CameraComponent cameraComponent = CameraComponent.Initializer.init(context);
 //
         cameraComponent.inject(this);
+
+        //init default config
+        EvilsLiveStreamerConfig.Builder builder = EvilsLiveStreamerConfig.Builder.newBuilder();
+        setStreamConfig(builder.build());
+
     }
 
     /**
      * 设置预览界面
      * @param surfaceView view
      */
-    public void setDisplayPreview(GLSurfaceView surfaceView) {
+    public void setDisplayPreview(SurfaceView surfaceView) {
         cameraSupport.setDisplayPreview(surfaceView);
     }
 
@@ -41,6 +47,7 @@ public class EvilsLiveStreamer {
      * @param config config
      */
     public void setStreamConfig(EvilsLiveStreamerConfig config) {
+//        EvilsLiveStreamerConfig.Builder builder = EvilsLiveStreamerConfig.Builder.newBuilder();
         cameraSupport.setStreamConfig(config);
     }
 
@@ -56,14 +63,14 @@ public class EvilsLiveStreamer {
     /**
      * 开始推流
      */
-    public void startStream() {
-
+    public void startStream(int cameraId) {
+        cameraSupport.open(cameraId);
     }
 
     /**
      * 停止推流
      */
     public void stopStream() {
-
+        cameraSupport.close();
     }
 }

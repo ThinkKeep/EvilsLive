@@ -1,6 +1,6 @@
 package com.thinkkeep.videolib.model;
 
-import android.opengl.GLSurfaceView;
+import android.view.SurfaceView;
 
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
 
@@ -28,7 +28,7 @@ public interface CameraSupport {
      * 设置预览View
      * @param surfaceView view
      */
-    void setDisplayPreview(GLSurfaceView surfaceView);
+    void setDisplayPreview(SurfaceView surfaceView);
 
     /**
      * 设置推流预览回调
@@ -41,4 +41,9 @@ public interface CameraSupport {
      * @param config config
      */
     void setStreamConfig(EvilsLiveStreamerConfig config);
+
+    /**
+     * 关闭 camera
+     */
+    void close();
 }
