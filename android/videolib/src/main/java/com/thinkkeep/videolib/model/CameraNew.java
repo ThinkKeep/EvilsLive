@@ -21,6 +21,8 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
@@ -62,8 +64,9 @@ public class CameraNew implements CameraSupport {
     private Semaphore cameraOpenCloseLock = new Semaphore(1);
     private boolean mIsInPreview;
 
-    private OnPreviewFrameListener listener;
+    private Handler mHandler;
 
+    private OnPreviewFrameListener listener;
     private ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader imageReader) {
@@ -79,6 +82,7 @@ public class CameraNew implements CameraSupport {
             }
         }
     };
+    private HandlerThread handlerThread;
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -91,6 +95,8 @@ public class CameraNew implements CameraSupport {
     @Override
     public CameraSupport open(final int cameraId) {
         try {
+            startCamera2Thread();
+
             if (mIsInPreview) {
                 reconfigureCamera();
                 return this;
@@ -99,7 +105,7 @@ public class CameraNew implements CameraSupport {
             mIsInPreview = true;
 
             mImageReader = ImageReader.newInstance(640, 480, ImageFormat.JPEG, 2);
-            mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, null);
+            mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mHandler);
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MICROSECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
             }
@@ -132,12 +138,31 @@ public class CameraNew implements CameraSupport {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "open: jjjj");
             }
-            manager.openCamera(cameraIds[cameraId], deviceCallback, null);
+            manager.openCamera(cameraIds[cameraId], deviceCallback, mHandler);
 
         } catch (Exception e) {
             Log.e(TAG, "open: " + Log.getStackTraceString(e));
         }
         return this;
+    }
+
+    private void startCamera2Thread() {
+        handlerThread = new HandlerThread("Camera2");
+        handlerThread.start();
+        mHandler = new Handler(handlerThread.getLooper());
+    }
+
+    private void stopCamera2Thread() {
+        if (handlerThread != null) {
+            handlerThread.quitSafely();
+            try {
+                handlerThread.join();
+                handlerThread = null;
+                mHandler = null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void reconfigureCamera() {
@@ -146,7 +171,7 @@ public class CameraNew implements CameraSupport {
                 mCaptureSession.stopRepeating();
 
                 mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-                mCaptureSession.capture(mPreviewBuilder.build(), mPreCaptureCallback, null);
+                mCaptureSession.capture(mPreviewBuilder.build(), mPreCaptureCallback, mHandler);
 
                 doPreviewConfiguration();
             } catch (CameraAccessException e) {
@@ -161,15 +186,15 @@ public class CameraNew implements CameraSupport {
         }
 
         try {
-            mPreviewBuilder = mCamera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            mPreviewBuilder.addTarget(surfaceView.getHolder().getSurface());
-            mPreviewBuilder.addTarget(mImageReader.getSurface());
+//            mPreviewBuilder = mCamera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+//            mPreviewBuilder.addTarget(surfaceView.getHolder().getSurface());
+//            mPreviewBuilder.addTarget(mImageReader.getSurface());
 
             mPreviewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
             mPreviewBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
             mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
 
-            mCaptureSession.setRepeatingRequest(mPreviewBuilder.build(), mPreCaptureCallback, null);
+            mCaptureSession.setRepeatingRequest(mPreviewBuilder.build(), mPreCaptureCallback, mHandler);
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -203,17 +228,17 @@ public class CameraNew implements CameraSupport {
         }
 
         SurfaceHolder holder = surfaceView.getHolder();
-        if (config != null) {
-            holder.setFixedSize(640, 480);
-        }
+//        if (config != null) {
+//            holder.setFixedSize(640, 480);
+//        }
         Surface surface = holder.getSurface();
         List<Surface> surfaceList = Arrays.asList(surface, mImageReader.getSurface());
 
         try {
-//            mCamera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-//            mPreviewBuilder.addTarget(surface);
+            mPreviewBuilder = mCamera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            mPreviewBuilder.addTarget(surface);
 
-            mCamera.createCaptureSession(surfaceList, sessionCallback, null);
+            mCamera.createCaptureSession(surfaceList, sessionCallback, mHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -233,25 +258,6 @@ public class CameraNew implements CameraSupport {
 
         }
     };
-
-    private void updatePreview(CameraCaptureSession cameraCaptureSession) {
-        if (mCamera == null) {
-            return;
-        }
-
-        setUpCaptureRequestBuilder(mPreviewBuilder);
-
-        try {
-            cameraCaptureSession.setRepeatingRequest(mPreviewBuilder.build(), mPreCaptureCallback, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    private void setUpCaptureRequestBuilder(CaptureRequest.Builder builder) {
-        builder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-    }
 
     @Override
     public int getOrientation(final int cameraId) {
@@ -282,8 +288,8 @@ public class CameraNew implements CameraSupport {
 
     @Override
     public void close() {
-        Log.d(TAG, "close: ddddd");
         mIsInPreview = false;
+        stopCamera2Thread();
         closeCamera();
     }
 
