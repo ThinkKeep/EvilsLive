@@ -23,7 +23,7 @@ import com.thinkkeep.evils.di.component.DaggerActivityComponent;
 import com.thinkkeep.evils.di.modules.ActivityModule;
 import com.thinkkeep.videolib.api.EvilsLiveStreamer;
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
-import com.thinkkeep.videolib.jni.EvilsJni;
+import com.thinkkeep.videolib.jni.EvilsLiveJni;
 import com.thinkkeep.videolib.model.CameraSupport;
 
 import javax.inject.Inject;
@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_camera) {
             // Handle the camera action
-            Snackbar.make(getCurrentFocus(), EvilsJni.testJni(), 10000).show();
+            Snackbar.make(getCurrentFocus(), EvilsLiveJni.testJni(), 10000).show();
         } else if (id == R.id.nav_gallery) {
 
         } else if (id == R.id.nav_slideshow) {

@@ -17,9 +17,8 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
-import android.media.Image;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
-import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -27,15 +26,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.util.Range;
+import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -70,19 +69,20 @@ public class CameraNew implements CameraSupport {
     private ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader imageReader) {
-            Log.d(TAG, "onImageAvailable: xx");
-            Image image = imageReader.acquireNextImage();
-            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-            byte[] data = new byte[buffer.remaining()];
-            buffer.get(data);
-            image.close();
-
-            if (listener != null) {
-                listener.onPreviewFrameListener(data, 754, 360);
-            }
+            Log.e(TAG, "onImageAvailable: xx");
+//            Image image = imageReader.acquireNextImage();
+//            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+//            byte[] data = new byte[buffer.remaining()];
+//            buffer.get(data);
+//            image.close();
+//
+//            if (listener != null) {
+//                listener.onPreviewFrameListener(data, 754, 360);
+//            }
         }
     };
     private HandlerThread handlerThread;
+    private Range<Integer>[] mFps;
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -104,11 +104,12 @@ public class CameraNew implements CameraSupport {
 
             mIsInPreview = true;
 
-            mImageReader = ImageReader.newInstance(640, 480, ImageFormat.JPEG, 2);
-            mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mHandler);
+
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MICROSECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
             }
+
+            printSupportFormats();
 
             String[] cameraIds = manager.getCameraIdList();
 
@@ -144,6 +145,28 @@ public class CameraNew implements CameraSupport {
             Log.e(TAG, "open: " + Log.getStackTraceString(e));
         }
         return this;
+    }
+
+    private void printSupportFormats() {
+        try {
+            for (String cameraId : manager.getCameraIdList()) {
+                CameraCharacteristics cameraCharacteristics = manager.getCameraCharacteristics(cameraId);
+                StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                if (map != null) {
+                    int[] outputFormats = map.getOutputFormats();
+                    Log.e(TAG, "printSupportFormats: imageFormat " + Arrays.toString(outputFormats));
+                    Size[] outputSizes = map.getOutputSizes(ImageFormat.JPEG);
+                    Log.e(TAG, "printSupportFormats: size: " + Arrays.toString(outputSizes));
+                    mImageReader = ImageReader.newInstance(640, 480, ImageFormat.YUV_420_888, 2);
+                    mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mHandler);
+                }
+
+                mFps = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+                Log.e(TAG, "printSupportFormats: fps " + Arrays.toString(mFps));
+            }
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     private void startCamera2Thread() {
@@ -189,11 +212,12 @@ public class CameraNew implements CameraSupport {
 //            mPreviewBuilder = mCamera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 //            mPreviewBuilder.addTarget(surfaceView.getHolder().getSurface());
 //            mPreviewBuilder.addTarget(mImageReader.getSurface());
+            mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+//            mPreviewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
+//            mPreviewBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
+//            mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
 
-            mPreviewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
-            mPreviewBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
-            mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-
+            mPreviewBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, mFps[mFps.length -1 ]);
             mCaptureSession.setRepeatingRequest(mPreviewBuilder.build(), mPreCaptureCallback, mHandler);
 
         } catch (CameraAccessException e) {
@@ -227,11 +251,14 @@ public class CameraNew implements CameraSupport {
             return;
         }
 
+
         SurfaceHolder holder = surfaceView.getHolder();
 //        if (config != null) {
 //            holder.setFixedSize(640, 480);
 //        }
         Surface surface = holder.getSurface();
+
+
         List<Surface> surfaceList = Arrays.asList(surface, mImageReader.getSurface());
 
         try {
@@ -297,6 +324,12 @@ public class CameraNew implements CameraSupport {
         try {
             cameraOpenCloseLock.acquire();
             if (mCaptureSession != null) {
+                try {
+                    mCaptureSession.stopRepeating();
+                    mCaptureSession.abortCaptures();
+                } catch (CameraAccessException e) {
+                    e.printStackTrace();
+                }
                 mCaptureSession.close();
                 mCaptureSession = null;
             }

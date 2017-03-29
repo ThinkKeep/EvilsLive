@@ -9,9 +9,14 @@
 
 
 extern "C"{
-    jstring Java_com_thinkkeep_videolib_jni_EvilsJni_testJni(JNIEnv* env, jobject instance);
+    jstring Java_com_thinkkeep_videolib_jni_EvilsLiveJni_testJni(JNIEnv* env, jobject instance);
 
-    JNIEXPORT jstring JNICALL
-        Java_com_thinkkeep_videolib_jni_EvilsJni_startPushStream(JNIEnv *env, jclass type);
+    JNIEXPORT void JNICALL
+        Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jclass type, jbyteArray j_data);
+
+    JNIEXPORT void JNICALL
+        Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass type,
+                                                             jbyteArray url_);
+
 }
 #endif //ANDROID_NATIVE_LIB_H
