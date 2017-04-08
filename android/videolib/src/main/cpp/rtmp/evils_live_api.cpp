@@ -1,4 +1,5 @@
 
+#include "os.h"
 #include "evils_live_api.h"
 #include "librtmppublish.h"
 #include "libh264enc.h"
