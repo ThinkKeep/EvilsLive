@@ -49,7 +49,7 @@ int evils_live_start_push_stream(int protocol, char *url)
 {
     (void)protocol;
 
-    unsigned char * h264_frame = malloc(MAX_FRAME_SIZE);
+    unsigned char * h264_frame = (unsigned char *)malloc(MAX_FRAME_SIZE);
     if (NULL == h264_frame) {
         return -1;
     }
@@ -91,7 +91,7 @@ int evils_live_start_push_stream(int protocol, char *url)
 	h264Params.RateControlMode  = 1;
 	h264Params.bitrate = 1000;
 	h264Params.FrameRate = 20;
-    H264VENC_Handle x264_handle = H264VENC_Create();
+    H264VENC_Handle x264_handle = H264VENC_Create(&h264Params);
 
     PushHandle handle;
     handle.rtmp_handle = rtmp_handle;
@@ -175,9 +175,9 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
         H264VENC_Handle x264_handle = g_PushHandle[index].x264_handle;
         YUV_POINTERS capture_frame;
 
-        capture_frame.pu8Y = yuv420;
-    	capture_frame.pu8U = yuv420 + width * height;
-    	capture_frame.pu8V = yuv420 + width * height * 5 / 4;
+        capture_frame.pu8Y = (unsigned char *)yuv420;
+    	capture_frame.pu8U = (unsigned char *)yuv420 + width * height;
+    	capture_frame.pu8V = (unsigned char *)yuv420 + width * height * 5 / 4;
     	capture_frame.strideY = (unsigned int)width;
     	capture_frame.strideU = (unsigned int)width / 2;
     	capture_frame.strideV = (unsigned int)width;
@@ -189,7 +189,7 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
 
         CLibRtmpPublishBase* pRtmp = g_PushHandle[index].rtmp_handle;
         if (pRtmp) {
-            flag = pRtmp->SendAVC(g_PushHandle[index].x264_frame, frame_size, 0);
+            flag = pRtmp->SendAVC((char *)g_PushHandle[index].x264_frame, frame_size, 0);
         }
     }
     mutex.Unlock();
