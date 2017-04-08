@@ -18,5 +18,11 @@ extern "C"{
         Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass type,
                                                              jbyteArray url_);
 
+    JNIEXPORT jint JNICALL
+        Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass type,
+                                                                     jbyteArray url_);
+    JNIEXPORT void JNICALL
+        Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jclass type,
+                                                                    jint hanlder);
 }
 #endif //ANDROID_NATIVE_LIB_H
