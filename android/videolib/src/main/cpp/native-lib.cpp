@@ -77,3 +77,22 @@ Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass
 
     env->ReleaseByteArrayElements(url_, url, 0);
 }
+
+JNIEXPORT jint JNICALL
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass type,
+                                                             jbyteArray url_) {
+    int size = 0;
+    char *url = ja2c(env, url_, &size);
+    AutoFree afdata(url);
+    // TODO
+
+}
+
+JNIEXPORT void JNICALL
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jclass type,
+                                                            jint hanlder) {
+
+
+    // TODO
+
+}
