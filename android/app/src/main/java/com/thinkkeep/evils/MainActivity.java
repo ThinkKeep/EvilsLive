@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.toolbar) Toolbar mToolbar;
     @Bind(R.id.fab) FloatingActionButton mFab;
     @Bind(R.id.switch_camera) Button mSwitchBtn;
+    @Bind(R.id.stop) Button stopBtn;
+    @Bind(R.id.start) Button startBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +98,16 @@ public class MainActivity extends AppCompatActivity
     void onClickSwitchBtn() {
         cameraId = 1 - cameraId;
         start(cameraId);
+    }
+
+    @OnClick(R.id.stop)
+    void onClickStopBtn() {
+
+    }
+
+    @OnClick(R.id.start)
+    void onClickStartBtn(){
+
     }
 
     @OnClick(R.id.fab)

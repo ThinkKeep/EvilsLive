@@ -992,14 +992,12 @@ void CLibRtmpPublish::MainThreadFn()
 	m_lenAVCSps = 0;
 	m_lenAVCPps = 0;
 
-	if (m_pAvcBuf)
-	{
+	if (m_pAvcBuf) {
 		FreeBuf(m_pAvcBuf);
 		m_pAvcBuf = NULL;
 	}
 
-	if (m_pRtmp)
-	{
+	if (m_pRtmp) {
 		m_pLogger->info("LIBRTMPPUBLISH: %08X, Disconnect()\n", this);
 
 		RTMP_DeleteStream(m_pRtmp);
@@ -1010,8 +1008,7 @@ void CLibRtmpPublish::MainThreadFn()
 
 	m_iRtmpSkt = -1;
 
-	while (1)
-	{
+	while (1) {
 		RtmpPBuf* pBuf = GetBuf();
 		if (NULL == pBuf)
 			break;
