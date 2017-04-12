@@ -15,8 +15,10 @@
 
 ## Usage
 **Step 1:**
+
 在进行推流之前，你需要有流媒体服务（视频上传默认rtmp协议），本地搭建或搭建在公用云上，随你意。
 例如：rtmp://127.0.0.1/live/hjd_phone
+
 **Step 2:**
 
 具体如何使用可以参照 [app](https://github.com/ThinkKeep/EvilsLive/tree/master/android/app) 中的代码
