@@ -58,7 +58,7 @@ public class JniManager extends Thread {
             @Override
             public void run() {
                 Log.e("hujd", "run:  startPush");
-                EvilsLiveJni.startPushStream(url);
+                index = EvilsLiveJni.startPushStream(url);
             }
         });
         return 0;

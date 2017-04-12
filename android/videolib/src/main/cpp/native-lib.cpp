@@ -64,10 +64,24 @@ void JNICALL
 Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jobject instance, jint index,
                                                         jbyteArray j_data, jint width_, jint height_) {
     int size = 0;
-    char *data = ja2c(env, j_data, &size);
-    AutoFree afdata(data);
+    char *data = (char *)env->GetByteArrayElements(j_data, JNI_FALSE);
+    if (NULL == data) {
+        log_error("GetByteArrayElements failed");
+        return;
+    }
+    size = env->GetArrayLength(j_data);
+    if (size <= 0) {
+        log_error("GetArrayLength %d <= 0", size);
+        return;
+    }
     //TODO
-    evils_live_send_yuv420(index, data, size, width_, height_);
+
+    int res = evils_live_send_yuv420(index, data, size, width_, height_);
+
+    log_error("evils_live_send_yuv420 size %d width %d height %d res %d", size, width_, height_, res);
+
+    env->ReleaseByteArrayElements(j_data, (jbyte *)data, 0);
+
 }
 
 

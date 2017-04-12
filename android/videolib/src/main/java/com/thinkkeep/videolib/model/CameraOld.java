@@ -29,11 +29,11 @@ public class CameraOld implements CameraSupport {
     private Camera.PreviewCallback callback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
-            Log.e(TAG, "onPreviewFrame: " + data.length);
+//            Log.e(TAG, "onPreviewFrame: " + data.length);
             int width = camera.getParameters().getPictureSize().width;
             int height = camera.getParameters().getPictureSize().height;
             int index = JniManager.getInstance().getIndex();
-            Log.e(TAG, "onPreviewFrame: "+ index);
+//            Log.e(TAG, "onPreviewFrame: "+ index);
             if (index >= 0) {
                 JniManager.getInstance().sendStream(index, data, width, height);
             }

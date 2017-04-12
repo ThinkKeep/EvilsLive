@@ -4,6 +4,8 @@
 #include "librtmppublish.h"
 #include "libh264enc.h"
 
+#include "../log.h"
+
 #define MAX_FRAME_SIZE      (2 * 1024 * 1024)
 #define MAX_PUSH_STREAMS    (10)
 
@@ -48,7 +50,6 @@ void MyLibRtmpPublishCallback(CLibRtmpPublishBase* pLibRtmpPublish, int cmd, int
 int evils_live_start_push_stream(int protocol, char *url)
 {
     (void)protocol;
-
     unsigned char * h264_frame = (unsigned char *)malloc(MAX_FRAME_SIZE);
     if (NULL == h264_frame) {
         return -1;
@@ -64,6 +65,7 @@ int evils_live_start_push_stream(int protocol, char *url)
     if (!rtmp_handle->Start())
     {
         //m_pLogger->error("CLibRtmpPublish::Start() failed\n");
+        log_error("evils_live_start_push_stream Start fail");
         rtmp_handle->Stop();
         delete rtmp_handle;
         rtmp_handle = NULL;
@@ -71,28 +73,37 @@ int evils_live_start_push_stream(int protocol, char *url)
     }
     else
     {
+        log_error("evils_live_start_push_stream Connect");
+        log_error("evils_live_start_push_stream Connect url %s", url);
         rtmp_handle->Connect(url);
         //m_pLogger->info("MEDIASVR: live streaming to '%s' success\n", pTask->m_listLivePath[k]);
     }
 
     /* to do */
     H264VENC_Params h264Params;
-	h264Params.ProfileId        = 100;
-	h264Params.FrameWidth       = 720;
-	h264Params.FrameHeight      = 1280;
-	h264Params.LevelId          = 40;
-	h264Params.IdrFrameInterval = 20;
-	h264Params.OutputFormat     = 1;
-	h264Params.SarHeight        = 0;
-	h264Params.SarWidth         = 0;
-	h264Params.SlicePackMode    = 0;
-	h264Params.Transform8x8Flag = 1;
-	h264Params.InterPartition   = 1;
-	h264Params.RateControlMode  = 1;
-	h264Params.bitrate = 1000;
-	h264Params.FrameRate = 20;
-    H264VENC_Handle x264_handle = H264VENC_Create(&h264Params);
 
+    h264Params.ProfileId        = 100;
+    h264Params.FrameWidth       = 480;
+    h264Params.FrameHeight      = 640;
+    h264Params.LevelId          = 40;
+    h264Params.IdrFrameInterval = 60 ;
+    h264Params.OutputFormat     = 1;
+    h264Params.SarHeight        = 0;
+    h264Params.SarWidth         = 0;
+    h264Params.SlicePackMode    = 0;
+    h264Params.Transform8x8Flag = 1;
+    h264Params.InterPartition   = 1;
+    h264Params.RateControlMode  = 1;
+    h264Params.bitrate          = 1024;
+    h264Params.FrameRate        = 30;
+    h264Params.preset           = SuperFast;
+    h264Params.csp              = CSP_I420;
+
+    H264VENC_Handle x264_handle = H264VENC_Create(&h264Params);
+    if (NULL == x264_handle) {
+        log_error("evils_live_start_push_stream H264VENC_Create failed!");
+        return -1;
+    }
     PushHandle handle;
     handle.rtmp_handle = rtmp_handle;
     handle.x264_handle = x264_handle;
@@ -104,6 +115,7 @@ int evils_live_start_push_stream(int protocol, char *url)
     mutex.Lock();
 
     index = find_idle_handle();
+
     if (index >= MAX_PUSH_STREAMS) {
         //
         delete rtmp_handle;
@@ -169,6 +181,7 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
     bool flag = false;
 
     mutex.Lock();
+    log_error("evils_live_send_yuv420 index %d (yvv420 %p width %d, height %d)", index, yuv420, width, height);
     if (index >= 0 && index < MAX_PUSH_STREAMS) {
 
         /* x264 encode yuv to h264 */
@@ -180,16 +193,40 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
     	capture_frame.pu8V = (unsigned char *)yuv420 + width * height * 5 / 4;
     	capture_frame.strideY = (unsigned int)width;
     	capture_frame.strideU = (unsigned int)width / 2;
-    	capture_frame.strideV = (unsigned int)width;
+    	capture_frame.strideV = (unsigned int)width / 2;
+        log_error("H264_EncodeFrame(%p, %d, %p) ", x264_handle, index, g_PushHandle[index].x264_frame);
         int frame_size = H264_EncodeFrame(x264_handle, &capture_frame, g_PushHandle[index].x264_frame);
-        if (frame_size > MAX_FRAME_SIZE) {
-            //m_pLogger->info("\n", pTask->m_listLivePath[k]);
-            mutex.Unlock();
+        if (frame_size > MAX_FRAME_SIZE || frame_size <= 4) {
+            log_error("evils_live_send_yuv420 H264_EncodeFrame failed frame_size = %d", frame_size);
         }
-
+        log_error("frame_size %d ", frame_size);
         CLibRtmpPublishBase* pRtmp = g_PushHandle[index].rtmp_handle;
-        if (pRtmp) {
-            flag = pRtmp->SendAVC((char *)g_PushHandle[index].x264_frame, frame_size, 0);
+        if (pRtmp && frame_size > 4) {
+            log_error("evils_live_send_yuv420 SendAVC ");
+            unsigned char * frame = g_PushHandle[index].x264_frame;
+            int nalPos[256];
+            int nalPos_index = 0;
+            int frame_index = 0;
+            int slice_len;
+            while (1) {
+                int naluType = frame[frame_index + 4] & 0x1F;
+
+                if (7 == naluType || 8 == naluType || 5 == naluType || 1 == naluType) {
+                    nalPos[nalPos_index] = frame_index;
+                    nalPos_index++;
+                }
+
+                frame_index += *(int *)frame[frame_index];
+                if (frame_index >= frame_size) {
+                    break;
+                }
+            }
+
+            for (int i = 0; i < nalPos_index; ++i) {
+                slice_len = *(int *)(frame + nalPos[nalPos_index]);
+                flag = pRtmp->SendAVC((char *)frame + nalPos[nalPos_index] + 4, slice_len, 0);
+                log_error("pRtmp->SendAVC flag %d ", flag);
+            }
         }
     }
     mutex.Unlock();
