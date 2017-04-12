@@ -13,12 +13,32 @@
         android:id="@+id/surface_view"
         android:layout_width="240dp"
         android:layout_height="160dp"/>
-    <Button
-        android:id="@+id/switch_camera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:text="切换摄像头"/>
+
+   <LinearLayout
+       android:layout_width="wrap_content"
+       android:orientation="vertical"
+       android:layout_height="wrap_content">
+       <Button
+           android:id="@+id/switch_camera"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_marginLeft="20dp"
+           android:text="切换摄像头"/>
+
+       <Button
+           android:id="@+id/start"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_marginLeft="20dp"
+           android:text="启流" />
+
+       <Button
+           android:id="@+id/stop"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_marginLeft="20dp"
+           android:text="停流" />
+   </LinearLayout>
 
 
     <!--<Button-->

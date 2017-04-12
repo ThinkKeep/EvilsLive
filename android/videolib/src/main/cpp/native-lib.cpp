@@ -4,6 +4,7 @@
 
 #include "native-lib.h"
 #include <stdlib.h>
+#include <evils_live_api.h>
 
 #include "log.h"
 
@@ -60,16 +61,32 @@ private:
 };
 
 void JNICALL
-Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jclass type, jbyteArray j_data) {
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jobject instance, jint index,
+                                                        jbyteArray j_data, jint width_, jint height_) {
     int size = 0;
-    char *data = ja2c(env, j_data, &size);
-    AutoFree afdata(data);
+    char *data = (char *)env->GetByteArrayElements(j_data, JNI_FALSE);
+    if (NULL == data) {
+        log_error("GetByteArrayElements failed");
+        return;
+    }
+    size = env->GetArrayLength(j_data);
+    if (size <= 0) {
+        log_error("GetArrayLength %d <= 0", size);
+        return;
+    }
     //TODO
+
+    int res = evils_live_send_yuv420(index, data, size, width_, height_);
+
+    log_error("evils_live_send_yuv420 size %d width %d height %d res %d", size, width_, height_, res);
+
+    env->ReleaseByteArrayElements(j_data, (jbyte *)data, 0);
+
 }
 
 
 JNIEXPORT void JNICALL
-Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass type,
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jobject instance,
                                                              jbyteArray url_) {
     jbyte *url = env->GetByteArrayElements(url_, NULL);
 
@@ -78,21 +95,26 @@ Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass
     env->ReleaseByteArrayElements(url_, url, 0);
 }
 
-JNIEXPORT jint JNICALL
-Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass type,
+jint Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jobject instance,
                                                              jbyteArray url_) {
     int size = 0;
     char *url = ja2c(env, url_, &size);
     AutoFree afdata(url);
     // TODO
+    log_error("url fff hujd");
+    evils_live_init();
+    int index = evils_live_start_push_stream(0, url);
+    log_error("url fff hujd %s, %d", url, index);
 
+    return index;
 }
 
 JNIEXPORT void JNICALL
-Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jclass type,
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jobject instance,
                                                             jint hanlder) {
-
+    log_error("url hujd");
 
     // TODO
-
+//    evils_live_stop_push_stream(hanlder);
+//    evils_live_destory();
 }

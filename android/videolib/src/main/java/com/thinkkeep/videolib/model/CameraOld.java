@@ -8,6 +8,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
+import com.thinkkeep.videolib.jni.JniManager;
 
 import java.util.List;
 
@@ -28,10 +29,15 @@ public class CameraOld implements CameraSupport {
     private Camera.PreviewCallback callback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
-            Log.d(TAG, "onPreviewFrame: " + data.length);
+//            Log.e(TAG, "onPreviewFrame: " + data.length);
+            int width = camera.getParameters().getPictureSize().width;
+            int height = camera.getParameters().getPictureSize().height;
+            int index = JniManager.getInstance().getIndex();
+//            Log.e(TAG, "onPreviewFrame: "+ index);
+            if (index >= 0) {
+                JniManager.getInstance().sendStream(index, data, width, height);
+            }
             if (listener != null) {
-                int width = camera.getParameters().getPictureSize().width;
-                int height = camera.getParameters().getPictureSize().height;
                 listener.onPreviewFrameListener(data, width, height);
             }
         }
@@ -39,9 +45,14 @@ public class CameraOld implements CameraSupport {
     private EvilsLiveStreamerConfig config;
     private SurfaceView surfaceView;
 
+
     @Override
     public CameraSupport open(final int cameraId) {
         this.camera = Camera.open(cameraId);
+        String str = "rtmp://123.57.140.161/live/hjd_phone";
+        JniManager.getInstance().startPushStream(str.getBytes());
+//        JniManager.getInstance().stopPushStream(0);
+
         startPreview();
         return this;
     }
@@ -97,19 +108,19 @@ public class CameraOld implements CameraSupport {
         parameters.setRotation(90);
 
         // TODO: 17/3/26 再来先写死
-        parameters.setPreviewSize(720, 480);
-        parameters.setPictureSize(720, 480);
+        parameters.setPreviewSize(640, 480);
+        parameters.setPictureSize(640, 480);
         parameters.setPreviewFormat(ImageFormat.NV21);
 
         List<Integer> list = parameters.getSupportedPreviewFormats();
         for (Integer val : list) {
-            Log.d(TAG, "startPreview: val: " + val);
+            Log.e(TAG, "startPreview: val: " + val);
         }
 
         List<Camera.Size> sizeList = parameters.getSupportedPreviewSizes();
         if (sizeList.size() > 1) {
             for (Camera.Size cur : sizeList) {
-                Log.d(TAG, "size==" + cur.width + " " + cur.height);
+                Log.e(TAG, "size==" + cur.width + " " + cur.height);
             }
         }
         return parameters;
@@ -134,6 +145,7 @@ public class CameraOld implements CameraSupport {
             return ;
         }
 
+        JniManager.getInstance().stopPushStream(JniManager.getInstance().getIndex());
         camera.setPreviewCallback(null);
         camera.stopPreview();
         camera.release();
