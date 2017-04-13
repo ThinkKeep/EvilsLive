@@ -4,20 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools" android:id="@+id/content_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
-    android:gravity="center_horizontal"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior" tools:context="com.thinkkeep.evils.MainActivity"
     tools:showIn="@layout/app_bar_main">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
 
     <SurfaceView
         android:id="@+id/surface_view"
         android:layout_width="240dp"
         android:layout_height="160dp"/>
 
-   <LinearLayout
-       android:layout_width="wrap_content"
-       android:orientation="vertical"
-       android:layout_height="wrap_content">
        <Button
            android:id="@+id/switch_camera"
            android:layout_width="wrap_content"
@@ -25,20 +25,18 @@
            android:layout_marginLeft="20dp"
            android:text="切换摄像头"/>
 
-       <Button
-           android:id="@+id/start"
-           android:layout_width="wrap_content"
-           android:layout_height="wrap_content"
-           android:layout_marginLeft="20dp"
-           android:text="启流" />
-
-       <Button
-           android:id="@+id/stop"
-           android:layout_width="wrap_content"
-           android:layout_height="wrap_content"
-           android:layout_marginLeft="20dp"
-           android:text="停流" />
    </LinearLayout>
+    <EditText
+        android:id="@+id/edit_str"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="rtmp://123.57.140.160/live/hjd_phone"/>
+    <Button
+        android:id="@+id/start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:text="启流" />
 
 
     <!--<Button-->

@@ -1,38 +1,16 @@
 package com.thinkkeep.videolib.api;
 
+import android.graphics.ImageFormat;
+
+import com.thinkkeep.videolib.util.Defines;
+
+import static com.thinkkeep.videolib.util.Defines.EVIDEO_RESOLUTION.E640P;
+
 /**
  * Created by jason on 17/3/16.
  */
 
 public class EvilsLiveStreamerConfig {
-    public enum EENCODE_METHOD {
-        SOFTWARE_ENCODE,
-        HARDWARE_ENCODE,
-        ;
-    }
-
-    public enum EVIDEO_RESOLUTION {
-        E360P(480, 360),
-        E480P(858, 480),
-        E540P(960, 540),
-        E720P(1080, 720),
-        ;
-        private final int width;
-        private final int height;
-
-        public int getWidth() {
-            return width;
-        }
-
-        public int getHeight() {
-            return height;
-        }
-
-        EVIDEO_RESOLUTION(int width, int height) {
-            this.width = width;
-            this.height = height;
-        }
-    }
 
     private static final EvilsLiveStreamerConfig DEFAULT_INSTANCE;
 
@@ -44,11 +22,13 @@ public class EvilsLiveStreamerConfig {
 
     private String streamUrl;
 
-    private EENCODE_METHOD encodeMethod;
+    private Defines.EENCODE_METHOD encodeMethod;
 
-    private EVIDEO_RESOLUTION videoresolution;
+    private Defines.EVIDEO_RESOLUTION videoresolution;
 
     private boolean frontCamera;
+
+    private int imageFormat;
 
 
     private EvilsLiveStreamerConfig(Builder builder) {
@@ -59,8 +39,9 @@ public class EvilsLiveStreamerConfig {
         this.frameRate = 20;
         this.frontCamera = false;
         this.streamUrl = "";
-        this.videoresolution = EVIDEO_RESOLUTION.E360P;
-        this.encodeMethod = EENCODE_METHOD.SOFTWARE_ENCODE;
+        this.videoresolution = E640P;
+        this.encodeMethod = Defines.EENCODE_METHOD.SOFTWARE_ENCODE;
+        this.imageFormat = ImageFormat.NV21;
     }
 
     private void builder(Builder builder) {
@@ -69,6 +50,14 @@ public class EvilsLiveStreamerConfig {
         this.encodeMethod = builder.encodeMethod;
         this.videoresolution = builder.videoresolution;
         this.frontCamera = builder.frontCamera;
+    }
+
+    /**
+     * 获取图像格式
+     * @return
+     */
+    public int getImageFormat() {
+        return imageFormat;
     }
 
     /**
@@ -92,7 +81,7 @@ public class EvilsLiveStreamerConfig {
      * 获取视频编码方式
      * @return resolution
      */
-    public EENCODE_METHOD getEncodeMethod() {
+    public Defines.EENCODE_METHOD getEncodeMethod() {
         return encodeMethod;
     }
 
@@ -101,7 +90,7 @@ public class EvilsLiveStreamerConfig {
      * 获取视频分辨率
      * @return resolution
      */
-    public EVIDEO_RESOLUTION getVideoResolution() {
+    public Defines.EVIDEO_RESOLUTION getVideoResolution() {
         return videoresolution;
     }
 
@@ -121,11 +110,13 @@ public class EvilsLiveStreamerConfig {
 
         private String streamUrl;
 
-        private EENCODE_METHOD encodeMethod;
+        private Defines.EENCODE_METHOD encodeMethod;
 
-        private EVIDEO_RESOLUTION videoresolution;
+        private Defines.EVIDEO_RESOLUTION videoresolution;
 
         private boolean frontCamera;
+
+        private int imageFormat;
 
         private Builder() {
         }
@@ -138,12 +129,19 @@ public class EvilsLiveStreamerConfig {
             this.frontCamera = frontCamera;
         }
 
+        /**
+         * 设置推流url
+         * @param streamUrl url
+         */
+        public void setStreamUrl(String streamUrl) {
+            this.streamUrl = streamUrl;
+        }
 
         /**
          * 设置视频编码方式
          * @param encodeMethod 软编码/硬编码
          */
-        public void setEncodeMethod(EENCODE_METHOD encodeMethod) {
+        public void setEncodeMethod(Defines.EENCODE_METHOD encodeMethod) {
             this.encodeMethod = encodeMethod;
         }
 
@@ -155,6 +153,13 @@ public class EvilsLiveStreamerConfig {
             this.frameRate = frameRate;
         }
 
+        /**
+         * 设置图像格式
+         * @param imageFormat imageFormat
+         */
+        public void setImageFormat(int imageFormat) {
+            this.imageFormat = imageFormat;
+        }
 
         public static Builder newBuilder() {
             return DEFAULT_INSTANCE.toBuilder();
@@ -175,6 +180,7 @@ public class EvilsLiveStreamerConfig {
         builder.streamUrl = DEFAULT_INSTANCE.streamUrl;
         builder.encodeMethod = DEFAULT_INSTANCE.encodeMethod;
         builder.videoresolution = DEFAULT_INSTANCE.videoresolution;
+        builder.imageFormat = DEFAULT_INSTANCE.imageFormat;
         return builder;
     }
 }

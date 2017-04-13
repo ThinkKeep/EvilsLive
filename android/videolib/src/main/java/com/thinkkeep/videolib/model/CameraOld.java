@@ -8,6 +8,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
+import com.thinkkeep.videolib.util.Defines;
 import com.thinkkeep.videolib.jni.JniManager;
 
 import java.util.List;
@@ -21,21 +22,34 @@ import java.util.List;
 public class CameraOld implements CameraSupport {
 
     private static final String TAG = CameraOld.class.getName();
+    private static final int DEFAULT_IMAGE_FORMAT = ImageFormat.NV21;
     private Camera camera;
 
     private OnPreviewFrameListener listener;
 
 
+    static final class Size {
+        final int withd;
+        final int height;
+
+        Size(int withd, int height) {
+            this.withd = withd;
+            this.height = height;
+        }
+    }
+
     private Camera.PreviewCallback callback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
 //            Log.e(TAG, "onPreviewFrame: " + data.length);
-            int width = camera.getParameters().getPictureSize().width;
-            int height = camera.getParameters().getPictureSize().height;
+            int width = camera.getParameters().getPreviewSize().width;
+            int height = camera.getParameters().getPreviewSize().height;
             int index = JniManager.getInstance().getIndex();
 //            Log.e(TAG, "onPreviewFrame: "+ index);
             if (index >= 0) {
-                JniManager.getInstance().sendStream(index, data, width, height);
+                Log.e(TAG, "onPreviewFrame: "+ index);
+
+                //JniManager.getInstance().sendStream(index, data, width, height);
             }
             if (listener != null) {
                 listener.onPreviewFrameListener(data, width, height);
@@ -46,15 +60,30 @@ public class CameraOld implements CameraSupport {
     private SurfaceView surfaceView;
 
 
+
     @Override
     public CameraSupport open(final int cameraId) {
         this.camera = Camera.open(cameraId);
-        String str = "rtmp://123.57.140.161/live/hjd_phone";
-        JniManager.getInstance().startPushStream(str.getBytes());
-//        JniManager.getInstance().stopPushStream(0);
 
         startPreview();
         return this;
+    }
+
+    @Override
+    public int startPushStream() {
+        if (config != null && this.camera != null) {
+            String streamUrl = config.getStreamUrl();
+            if (streamUrlValid(streamUrl)) {
+                JniManager.getInstance().startPushStream(streamUrl.getBytes());
+                camera.setPreviewCallback(callback);
+            }
+        }
+
+        return 0;
+    }
+
+    private boolean streamUrlValid(String streamUrl) {
+        return streamUrl != null && !("".equals(streamUrl));
     }
 
     @Override
@@ -84,7 +113,6 @@ public class CameraOld implements CameraSupport {
             Camera.Parameters parameters = setParameters();
 
             camera.setParameters(parameters);
-            camera.setPreviewCallback(callback);
             camera.startPreview();
         } catch (Exception e) {
             Log.e(TAG, "startPreview: error" + Log.getStackTraceString(e));
@@ -94,36 +122,63 @@ public class CameraOld implements CameraSupport {
     @NonNull
     private Camera.Parameters setParameters() {
         Camera.Parameters parameters = camera.getParameters();
-        if (config != null) {
-            EvilsLiveStreamerConfig.EVIDEO_RESOLUTION videoresolution = config.getVideoResolution();
-            // TODO: 17/3/26
-            int width = videoresolution.getWidth();
-            int height = videoresolution.getHeight();
-//            parameters.setPreviewSize(width, height);
-        }
+        Size size = choosePreviewSize(parameters);
 
-        //设置预览方向
+        //TODO 设置预览方向
         camera.setDisplayOrientation(90);
-        //设置拍照之后方向
+        //TODO 设置拍照之后方向
         parameters.setRotation(90);
 
-        // TODO: 17/3/26 再来先写死
-        parameters.setPreviewSize(640, 480);
-        parameters.setPictureSize(640, 480);
-        parameters.setPreviewFormat(ImageFormat.NV21);
+        parameters.setPreviewSize(size.withd, size.height);
+        parameters.setPictureSize(size.withd, size.height);
+
+        int imageFormat = chooseImageFormat(parameters);
+
+        parameters.setPreviewFormat(imageFormat);
+
+
+        return parameters;
+    }
+
+    private int chooseImageFormat(Camera.Parameters parameters) {
+        if (config == null) {
+            return DEFAULT_IMAGE_FORMAT;
+        }
 
         List<Integer> list = parameters.getSupportedPreviewFormats();
         for (Integer val : list) {
             Log.e(TAG, "startPreview: val: " + val);
-        }
-
-        List<Camera.Size> sizeList = parameters.getSupportedPreviewSizes();
-        if (sizeList.size() > 1) {
-            for (Camera.Size cur : sizeList) {
-                Log.e(TAG, "size==" + cur.width + " " + cur.height);
+            if (val == config.getImageFormat()) {
+                return val;
             }
         }
-        return parameters;
+        return DEFAULT_IMAGE_FORMAT;
+    }
+
+    private Size choosePreviewSize(Camera.Parameters parameters) {
+        Size size = null;
+        if (config == null) {
+            return new Size(Defines.EVIDEO_RESOLUTION.E640P.getWidth(), Defines.EVIDEO_RESOLUTION.E640P.getHeight());
+        }
+
+        Defines.EVIDEO_RESOLUTION videoResolution = config.getVideoResolution();
+        if (videoResolution != null) {
+                      int width = videoResolution.getWidth();
+            int height = videoResolution.getHeight();
+            List<Camera.Size> sizeList = parameters.getSupportedPreviewSizes();
+            for (Camera.Size cur : sizeList) {
+                Log.e(TAG, "size==" + cur.width + " " + cur.height);
+                if (cur.width == width && cur.height == height) {
+                    size = new Size(width, height);
+                    break;
+                }
+            }
+        }
+        if (size == null) {
+            size = new Size(Defines.EVIDEO_RESOLUTION.E640P.getWidth(), Defines.EVIDEO_RESOLUTION.E640P.getHeight());
+        }
+
+        return size;
     }
 
     @Override
@@ -136,6 +191,18 @@ public class CameraOld implements CameraSupport {
         this.config = config;
     }
 
+    @Override
+    public void stopPushStream() {
+        if (camera == null) {
+            return;
+        }
+        int index = JniManager.getInstance().getIndex();
+        if (index >= 0 ) {
+            JniManager.getInstance().stopPushStream(index);
+        }
+        camera.setPreviewCallback(null);
+    }
+
     /**
      * 关闭Camera
      */
@@ -145,8 +212,6 @@ public class CameraOld implements CameraSupport {
             return ;
         }
 
-        JniManager.getInstance().stopPushStream(JniManager.getInstance().getIndex());
-        camera.setPreviewCallback(null);
         camera.stopPreview();
         camera.release();
         camera = null;

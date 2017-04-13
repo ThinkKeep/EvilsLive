@@ -12,7 +12,7 @@
         <!--android:label="@string/app_name"-->
         <!--android:supportsRtl="true"-->
         <!--android:theme="@style/AppTheme">-->
-        <!--<activity android:name="com.thinkkeep.videolib.activity.StreamActivity"></activity>-->
+        <!--<activity android:name="com.thinkkeep.videolib.ui.activity.StreamActivity"></activity>-->
     <!--</application>-->
 
 </manifest>
