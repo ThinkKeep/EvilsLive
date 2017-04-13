@@ -147,6 +147,11 @@ public class CameraNew implements CameraSupport {
         return this;
     }
 
+    @Override
+    public int startPushStream() {
+        return 0;
+    }
+
     private void printSupportFormats() {
         try {
             for (String cameraId : manager.getCameraIdList()) {
@@ -311,6 +316,11 @@ public class CameraNew implements CameraSupport {
     @Override
     public void setStreamConfig(EvilsLiveStreamerConfig config) {
         this.config = config;
+    }
+
+    @Override
+    public void stopPushStream() {
+
     }
 
     @Override

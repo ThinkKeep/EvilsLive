@@ -19,6 +19,11 @@ public interface CameraSupport {
     CameraSupport open(int cameraId);
 
     /**
+     * 开始推流
+     * @return err: 小于0 成功：0
+     */
+    int startPushStream();
+    /**
      * 获取Camera 方向
      * @param cameraId 前置或后置
      */
@@ -41,6 +46,12 @@ public interface CameraSupport {
      * @param config config
      */
     void setStreamConfig(EvilsLiveStreamerConfig config);
+
+    /**
+     * 停止推流
+     * @return err：小于0 成功：0
+     */
+    void stopPushStream();
 
     /**
      * 关闭 camera

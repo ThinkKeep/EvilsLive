@@ -1,10 +1,9 @@
-package com.thinkkeep.videolib.activity;
+package com.thinkkeep.videolib.ui.activity;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.thinkkeep.videolib.R;
-import com.thinkkeep.videolib.di.component.CameraComponent;
 import com.thinkkeep.videolib.model.CameraSupport;
 
 import javax.inject.Inject;

@@ -61,16 +61,31 @@ public class EvilsLiveStreamer {
     }
 
     /**
-     * 开始推流
+     * 开始预览
      */
-    public void startStream(int cameraId) {
+    public void startPreview(int cameraId) {
         cameraSupport.open(cameraId);
+    }
+
+    /**
+     * 停止预览
+     */
+    public void stopPreview() {
+        cameraSupport.close();
+    }
+
+    /**
+     * 开始推流
+     * @return 开启结果
+     */
+    public int startStream() {
+        return cameraSupport.startPushStream();
     }
 
     /**
      * 停止推流
      */
     public void stopStream() {
-        cameraSupport.close();
+        cameraSupport.stopPushStream();
     }
 }

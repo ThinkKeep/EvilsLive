@@ -11,12 +11,14 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.thinkkeep.evils.di.component.ActivityComponent;
 import com.thinkkeep.evils.di.component.DaggerActivityComponent;
@@ -59,8 +61,11 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.toolbar) Toolbar mToolbar;
     @Bind(R.id.fab) FloatingActionButton mFab;
     @Bind(R.id.switch_camera) Button mSwitchBtn;
-    @Bind(R.id.stop) Button stopBtn;
     @Bind(R.id.start) Button startBtn;
+    @Bind(R.id.edit_str) EditText urlEdit;
+
+    private boolean isStartStream = true;
+    private EvilsLiveStreamerConfig.Builder builder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,14 +105,24 @@ public class MainActivity extends AppCompatActivity
         start(cameraId);
     }
 
-    @OnClick(R.id.stop)
-    void onClickStopBtn() {
-
-    }
-
     @OnClick(R.id.start)
     void onClickStartBtn(){
-
+        if (isStartStream) {
+            String url = urlEdit.getText().toString();
+            if (TextUtils.isEmpty(url)) {
+                url = urlEdit.getHint().toString();
+            }
+            builder.setStreamUrl(url);
+            EvilsLiveStreamerConfig config = builder.build();
+            streamer.setStreamConfig(config);
+            streamer.startStream();
+            startBtn.setText("关闭推流");
+            isStartStream = false;
+        } else {
+            streamer.stopStream();
+            startBtn.setText("推送流");
+            isStartStream = true;
+        }
     }
 
     @OnClick(R.id.fab)
@@ -128,12 +143,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void start(int cameraId) {
-        EvilsLiveStreamerConfig.Builder builder = EvilsLiveStreamerConfig.Builder.newBuilder();
+        builder = EvilsLiveStreamerConfig.Builder.newBuilder();
         EvilsLiveStreamerConfig config = builder.build();
         streamer.setDisplayPreview(mPreviewView);
         streamer.setStreamConfig(config);
-        streamer.stopStream();
-        streamer.startStream(cameraId);
+        streamer.stopPreview();
+        streamer.startPreview(cameraId);
     }
 
     @Override
@@ -207,7 +222,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
         if (streamer != null) {
-            streamer.stopStream();
+            streamer.stopPreview();
         }
     }
 
