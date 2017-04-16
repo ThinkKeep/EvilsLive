@@ -32,8 +32,8 @@ public class CameraOld implements CameraSupport {
         final int withd;
         final int height;
 
-        Size(int withd, int height) {
-            this.withd = withd;
+        Size(int width, int height) {
+            this.withd = width;
             this.height = height;
         }
     }

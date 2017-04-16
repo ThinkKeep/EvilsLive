@@ -16,6 +16,11 @@ public class EvilsLiveJni {
     public static native String testJni();
 
     /**
+     * 初始化
+     */
+    public static native void init();
+
+    /**
      * 设置推流配置参数
      * @param url 推流服务器
      */
