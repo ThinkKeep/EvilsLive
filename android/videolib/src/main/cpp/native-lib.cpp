@@ -10,8 +10,20 @@
 
 char *ja2c(JNIEnv *pEnv, jbyteArray pArray, int *pInt);
 
+///------ java call jni
 jstring Java_com_thinkkeep_videolib_jni_EvilsLiveJni_testJni(JNIEnv* env, jobject instance) {
     return env->NewStringUTF("test Jni");
+}
+
+JNIEnv *gJniEnv = NULL;
+
+jclass gJniJc = NULL;
+
+JNIEXPORT void JNICALL
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_init(JNIEnv *env, jclass jc) {
+    // TODO
+    gJniEnv = env;
+    gJniJc = jc;
 }
 
 /**
@@ -61,7 +73,7 @@ private:
 };
 
 void JNICALL
-Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jobject instance, jint index,
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jclass jc, jint index,
                                                         jbyteArray j_data, jint width_, jint height_) {
     int size = 0;
     char *data = (char *)env->GetByteArrayElements(j_data, JNI_FALSE);
@@ -86,16 +98,16 @@ Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jobject ins
 
 
 JNIEXPORT void JNICALL
-Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jobject instance,
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass jc,
                                                              jbyteArray url_) {
-    jbyte *url = env->GetByteArrayElements(url_, NULL);
 
+    jbyte *url = env->GetByteArrayElements(url_, NULL);
     // TODO
 
     env->ReleaseByteArrayElements(url_, url, 0);
 }
 
-jint Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jobject instance,
+jint Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass jc,
                                                              jbyteArray url_) {
     int size = 0;
     char *url = ja2c(env, url_, &size);
@@ -110,11 +122,42 @@ jint Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, j
 }
 
 JNIEXPORT void JNICALL
-Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jobject instance,
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jclass jc,
                                                             jint hanlder) {
     log_error("url hujd");
 
     // TODO
    evils_live_stop_push_stream(hanlder);
    //evils_live_destory();
+}
+
+
+//------------- c call jni ---------------------
+
+void CheckJNIException(JNIEnv *env, const char *name) {
+    if(env->ExceptionCheck()) {
+        env->ExceptionClear();//清除异常
+        log_error("java %s Exception", name);
+    }
+}
+
+//用于测试
+int testCallJava(int index) {
+    if (!gJniEnv) {
+        return -1;
+    }
+    const char *mname = "testCall";
+
+    jmethodID method = gJniEnv->GetStaticMethodID(gJniJc, mname, "(ILjava/lang/String;)I");
+    if (method == NULL) {
+        log_error("method ID is NULL!");
+        return -1;
+    }
+
+    int ret = gJniEnv->CallStaticIntMethod(gJniJc, method, index, "test");
+    CheckJNIException(gJniEnv, mname);
+    if(ret != 0) {
+        log_warning("call java testCall, index:%d, return:%d", index, ret);
+    }
+    return ret;
 }
