@@ -7,9 +7,14 @@ extern "C" {
 
 int evils_live_init();
 
+/*  */
+int evils_live_create_push_stream(int protocol);
+
+/* push stream parameters */
+int evils_live_stream_config(int index, int width, int height, int framerate, int bitrate, bool forcedI);
 
 /* push stream to rtmp server */
-int evils_live_start_push_stream(int protocol, char *url);
+int evils_live_start_push_stream(int index, char *url);
 
 int evils_live_stop_push_stream(int index);
 
