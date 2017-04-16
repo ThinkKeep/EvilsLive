@@ -14,14 +14,18 @@ extern "C"{
     JNIEXPORT void JNICALL
         Java_com_thinkkeep_videolib_jni_EvilsLiveJni_init(JNIEnv* env, jclass jc);
 
+    JNIEXPORT jint JNICALL
+        Java_com_thinkkeep_videolib_jni_EvilsLiveJni_createPushStream(JNIEnv *env, jclass jc, jint protocol);
+
     JNIEXPORT void JNICALL
         Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jclass jc,
                                                                 jint index, jbyteArray j_data,
                                                                 jint width_, jint height_);
 
     JNIEXPORT void JNICALL
-        Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass jc,
-                                                             jbyteArray url_);
+            Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass jc,
+                                                                         jint index, jint width, jint height,
+                                                                         jint framerate, jint bitrate, jboolean forced);
 
     jint
         Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass jc,
@@ -29,5 +33,7 @@ extern "C"{
     JNIEXPORT void JNICALL
         Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jclass jc,
                                                                     jint hanlder);
+    JNIEXPORT void JNICALL
+        Java_com_thinkkeep_videolib_jni_EvilsLiveJni_destroy(JNIEnv *env, jclass jc);
 }
 #endif //ANDROID_NATIVE_LIB_H
