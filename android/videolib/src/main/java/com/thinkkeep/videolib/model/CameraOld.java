@@ -47,9 +47,9 @@ public class CameraOld implements CameraSupport {
             int index = JniManager.getInstance().getIndex();
 //            Log.e(TAG, "onPreviewFrame: "+ index);
             if (index >= 0) {
-                Log.e(TAG, "onPreviewFrame: "+ index);
+                //Log.e(TAG, "onPreviewFrame: "+ index);
 
-                //JniManager.getInstance().sendStream(index, data, width, height);
+                JniManager.getInstance().sendStream(index, data, width, height);
             }
             if (listener != null) {
                 listener.onPreviewFrameListener(data, width, height);

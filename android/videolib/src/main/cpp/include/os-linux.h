@@ -38,6 +38,7 @@
 #include <netinet/tcp.h>
 #include <errno.h>
 #include <assert.h>
+#include <time.h>
 
 #ifdef __arm__
 #ifndef CLOCK_MONOTONIC_RAW

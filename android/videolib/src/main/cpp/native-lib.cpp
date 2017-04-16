@@ -90,7 +90,7 @@ Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jclass jc, 
 
     int res = evils_live_send_yuv420(index, data, size, width_, height_);
 
-    log_error("evils_live_send_yuv420 size %d width %d height %d res %d", size, width_, height_, res);
+    //log_error("evils_live_send_yuv420 size %d width %d height %d res %d", size, width_, height_, res);
 
     env->ReleaseByteArrayElements(j_data, (jbyte *)data, 0);
 
@@ -127,8 +127,8 @@ Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jclass 
     log_error("url hujd");
 
     // TODO
-//    evils_live_stop_push_stream(hanlder);
-//    evils_live_destory();
+   evils_live_stop_push_stream(hanlder);
+   //evils_live_destory();
 }
 
 

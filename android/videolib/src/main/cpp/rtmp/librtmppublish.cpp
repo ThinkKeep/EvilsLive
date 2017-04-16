@@ -7,7 +7,7 @@
 #include "misc.h"
 #include "AmfByteStream.h"
 #include "librtmppublish.h"
-
+#include "../log.h"
 
 #define PUBLISH_THRESHOLD		6
 #define AMF_HEADER_SIZE			16
@@ -138,12 +138,12 @@ bool CLibRtmpPublish::Stop()
 {
 	m_fnLibRtmpPublishCallback = NULL;
 
-	m_pLogger->debug("LIBRTMPPUBLISH: %08X, Stop() - Step 1\n", this);
+	log_error("LIBRTMPPUBLISH: %08X, Stop() - Step 1", this);
 
 	if (!m_bInit)
 		return true;
 
-	m_pLogger->debug("LIBRTMPPUBLISH: %08X, Stop() - Step 2\n", this);
+    log_error("LIBRTMPPUBLISH: %08X, Stop() - Step 2", this);
 
 	m_bQuit = true;
 
@@ -151,7 +151,7 @@ bool CLibRtmpPublish::Stop()
 
 	if (NULL == pBuf)
 	{
-		m_pLogger->debug("LIBRTMPPUBLISH: %08X, Stop() - malloc failed\n", this);
+        log_error("LIBRTMPPUBLISH: %08X, Stop() - malloc failed", this);
 	}
 	else
 	{
@@ -174,14 +174,14 @@ bool CLibRtmpPublish::Stop()
 
 	SleepUs(10000);
 
-	m_pLogger->debug("LIBRTMPPUBLISH: %08X, Stop() - Step 3\n", this);
+    log_error("LIBRTMPPUBLISH: %08X, Stop() - Step 3", this);
 
 	while (m_bInit)
 	{
 		SleepUs(10000);
 	}
 
-	m_pLogger->debug("LIBRTMPPUBLISH: %08X, Stop() - Step 4\n", this);
+    log_error("LIBRTMPPUBLISH: %08X, Stop() - Step 4\n", this);
 
 	if ((thread_t)-1 != m_thread)
 	{
@@ -190,7 +190,7 @@ bool CLibRtmpPublish::Stop()
 
 	m_thread = (thread_t)-1;
 
-	m_pLogger->debug("LIBRTMPPUBLISH: %08X, Stop() - Step End\n", this);
+    log_error("LIBRTMPPUBLISH: %08X, Stop() - Step End\n", this);
 
 	return true;
 }
@@ -335,18 +335,18 @@ bool CLibRtmpPublish::SendAVC(const char* pData, int sizeOfData, uint32 timecode
 {
 	int naluType = (int)((unsigned char)pData[0] & 0x1F);
 
-	//m_pLogger->debug("LIBRTMPPUBLISH: %08X, SendAVC(%d, %u), naluType %d\n", this, sizeOfData, timecode, naluType);
+	//log_error("LIBRTMPPUBLISH: %08X, SendAVC(%d, %u), naluType %d", this, sizeOfData, timecode, naluType);
 
 	if (m_bIsFailed)
 		return false;
-
+	//log_error("2 LIBRTMPPUBLISH: %08X, SendAVC(%d, %u), naluType %d ", this, sizeOfData, timecode, naluType);
 	if (NULL == m_pAvcBuf)
 	{
 		m_pAvcBuf = (RtmpPBuf*)malloc(sizeof(RtmpPBuf));
 
 		if (NULL == m_pAvcBuf)
 		{
-			m_pLogger->debug("LIBRTMPPUBLISH: %08X, SendAVC() - malloc failed\n", this);
+			log_error("LIBRTMPPUBLISH: %08X, SendAVC() - malloc failed", this);
 			return false;
 		}
 
@@ -377,7 +377,7 @@ bool CLibRtmpPublish::SendAVC(const char* pData, int sizeOfData, uint32 timecode
 		if (NULL == m_pAvcBuf->pLargeData)
 		{
 			m_pAvcBuf->pLargeData = backBuf;
-			m_pLogger->debug("LIBRTMPPUBLISH: %08X, SendAAC() - malloc large data failed\n", this);
+			log_error("LIBRTMPPUBLISH: %08X, SendAAC() - malloc large data failed", this);
 			return false;
 		}
 
@@ -428,7 +428,7 @@ bool CLibRtmpPublish::SendAVC(const char* pData, int sizeOfData, uint32 timecode
 			memcpy(m_bufAVCPps, pData, sizeOfData);
 			m_lenAVCPps = sizeOfData;
 
-			m_pLogger->debug("LIBRTMPPUBLISH: %08X, AVC Decoder Specific Info ready\n", this);
+			log_error("LIBRTMPPUBLISH: %08X, AVC Decoder Specific Info ready\n", this);
 
 			if (m_lenAVCSps > 0 && m_lenAVCPps > 0)
 			{
@@ -459,7 +459,7 @@ bool CLibRtmpPublish::SendAVC(const char* pData, int sizeOfData, uint32 timecode
 
 	if (5 == naluType || 1 == naluType)
 	{
-		//m_pLogger->debug("LIBRTMPPUBLISH: %08X, AddBuf(), %d bytes\n", this, m_pAvcBuf->len);
+		//log_error("LIBRTMPPUBLISH: %08X, AddBuf(), %d bytes", this, m_pAvcBuf->len);
 		AddBuf(m_pAvcBuf);
 
 		m_iTotalSendBytes += m_pAvcBuf->len;
@@ -792,7 +792,7 @@ bool CLibRtmpPublish::SendAudioDataPacket(char* pData, int sizeOfData, uint32 ti
 
 bool CLibRtmpPublish::SendVideoDataPacket(char* pData, int sizeOfData, uint32 timecode)
 {
-	//m_pLogger->debug("LIBRTMPPUBLISH: %08X, SendVideoDataPacket(%d, %u)\n", this, sizeOfData, timecode);
+	//log_error("LIBRTMPPUBLISH: %08X, SendVideoDataPacket(%d, %u)", this, sizeOfData, timecode);
 
 	if (m_bQuit)
 		return false;
@@ -833,13 +833,13 @@ bool CLibRtmpPublish::Send(const char* pData, int sizeOfData, int type, uint32 t
 	rtmp_pakt.m_headerType = RTMP_PACKET_SIZE_LARGE;
 	rtmp_pakt.m_nInfoField2 = m_pRtmp->m_stream_id;
 	memcpy(rtmp_pakt.m_body, pData, sizeOfData);
-
+	//log_error("LIBRTMPPUBLISH: %08X, Send(), %d bytes timecode %u m_packetType %d", this, sizeOfData, timecode, type);
 	int retval = RTMP_SendPacket(m_pRtmp, &rtmp_pakt, 0);
 	RTMPPacket_Free(&rtmp_pakt);
 
 	if (!retval)
 	{
-		m_pLogger->debug("LIBRTMPPUBLISH: %08X, Send() failed, %d bytes\n", this, sizeOfData);
+		log_error("LIBRTMPPUBLISH: %08X, Send() failed, %d bytes", this, sizeOfData);
 	}
 
 	return retval;
@@ -951,7 +951,7 @@ void CLibRtmpPublish::MainThreadFn()
 
 					if (bOK && m_iBufNum > OVERFLOW_THRESHOLD)
 					{
-						m_pLogger->error("LIBRTMPPUBLISH: %08X, BUFFER OVERFLOW !!! bufNum %d\n", this, m_iBufNum);
+						log_error("LIBRTMPPUBLISH: %08X, BUFFER OVERFLOW !!! bufNum %d", this, m_iBufNum);
 						bOK = false;
 					}
 
@@ -962,6 +962,7 @@ void CLibRtmpPublish::MainThreadFn()
 					}
 
 					m_bIsFailed = !bOK;
+					//log_error("LIBRTMPPUBLISH: m_bIsFailed %d", m_bIsFailed);
 				}
 				break;
 		}
