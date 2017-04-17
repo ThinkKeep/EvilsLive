@@ -46,7 +46,7 @@ public class CameraOld implements CameraSupport {
             int width = camera.getParameters().getPreviewSize().width;
             int height = camera.getParameters().getPreviewSize().height;
             int index = JniManager.getInstance().getIndex();
-//            Log.e(TAG, "onPreviewFrame: "+ index);
+            //Log.e(TAG, "onPreviewFrame: "+ index);
             if (index >= 0) {
                 //Log.e(TAG, "onPreviewFrame: "+ index);
 
@@ -75,7 +75,7 @@ public class CameraOld implements CameraSupport {
         if (config != null && this.camera != null) {
             String streamUrl = config.getStreamUrl();
             if (streamUrlValid(streamUrl)) {
-                JniManager.getInstance().startPushStream(size, streamUrl.getBytes(), 30, 384);
+                JniManager.getInstance().startPushStream(size, streamUrl.getBytes(), 15, 512);
                 camera.setPreviewCallback(callback);
             }
         }

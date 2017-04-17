@@ -24,6 +24,7 @@ public class JniManager extends Thread {
 
         this.running = true;
         callList.clear();
+        EvilsLiveJni.init();
         start();
     }
 
@@ -73,7 +74,7 @@ public class JniManager extends Thread {
             @Override
             public void run() {
                 Log.e("hujd", "run:  startPush");
-                int index = EvilsLiveJni.createPushStream(0);
+                index = EvilsLiveJni.createPushStream(0);
 
                 EvilsLiveJni.setStreamConfig(index, size.width, size.height, frameRate, bitRate, false);
                 EvilsLiveJni.startPushStream(index, url);

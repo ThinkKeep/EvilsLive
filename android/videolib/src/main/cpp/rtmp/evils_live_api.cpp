@@ -84,6 +84,7 @@ int evils_live_create_push_stream(int protocol)
         mutex.Unlock();
         return -1;
     }
+    g_PushHandle[index].is_exist = true;
     mutex.Unlock();
 
     return index;
@@ -97,66 +98,66 @@ int evils_live_stream_config(int index, int width, int height, int framerate, in
         return -1;
     }
     mutex.Lock();
-    if (g_PushHandle[index].x264_handle) {
-        StreamConfig *config = &g_PushHandle[index].config;
-        if (width != config->width || height != config->height) {
-            if (g_PushHandle[index].x264_handle) {
-                /* close x264 encoder */
-                H264VENC_Close(g_PushHandle[index].x264_handle);
-                g_PushHandle[index].x264_handle = NULL;
-            } else {
-                if (NULL == g_PushHandle[index].x264_frame) {
-                    g_PushHandle[index].x264_frame = (unsigned char *)malloc(MAX_FRAME_SIZE);
-                    if (NULL == g_PushHandle[index].x264_frame) {
-                        mutex.Unlock();
-                        log_error("malloc x264_frame failed!");
-                        return -1;
-                    }
-                }
-            }
 
-            /* create x264 encoder */
-            H264VENC_Params h264Params;
-            h264Params.ProfileId        = 100;
-            h264Params.FrameWidth       = width;
-            h264Params.FrameHeight      = height;
-            h264Params.LevelId          = 40;
-            h264Params.IdrFrameInterval = 60;
-            h264Params.OutputFormat     = 1;
-            h264Params.SarHeight        = 0;
-            h264Params.SarWidth         = 0;
-            h264Params.SlicePackMode    = 0;
-            h264Params.Transform8x8Flag = 1;
-            h264Params.InterPartition   = 1;
-            h264Params.RateControlMode  = 1;
-            h264Params.bitrate          = bitrate;
-            h264Params.FrameRate        = framerate;
-            h264Params.preset           = SuperFast;
-            h264Params.csp              = CSP_I420;
-
-            g_PushHandle[index].x264_handle = H264VENC_Create(&h264Params);
-            if (NULL == g_PushHandle[index].x264_handle) {
-                log_error("H264VENC_Create failed!");
-                mutex.Unlock();
-                return -1;
-            }
+    StreamConfig *config = &g_PushHandle[index].config;
+    if (width != config->width || height != config->height) {
+        if (g_PushHandle[index].x264_handle) {
+            /* close x264 encoder */
+            H264VENC_Close(g_PushHandle[index].x264_handle);
+            g_PushHandle[index].x264_handle = NULL;
         } else {
-            if (framerate != config->framerate || bitrate != config->bitrate) {
-                H264VENC_DynamicParams h264DynamicParams;
-                h264DynamicParams.Deblock       = 1;
-                h264DynamicParams.ForceIFrame   = forcedI;
-                h264DynamicParams.SliceSize     = 0xFFFF;
-                h264DynamicParams.RcQMax        = 45;
-                h264DynamicParams.RcQMin        = 10;
-                h264DynamicParams.FrameRate     = framerate;
-                h264DynamicParams.TargetBitRate = bitrate;      // in kbps
-                H264_SetDynamicParams(g_PushHandle[index].x264_handle, &h264DynamicParams);
-            } else if (!forcedI) {
-                log_error("parameter are same as last");
+            if (NULL == g_PushHandle[index].x264_frame) {
+                g_PushHandle[index].x264_frame = (unsigned char *)malloc(MAX_FRAME_SIZE);
+                if (NULL == g_PushHandle[index].x264_frame) {
+                    mutex.Unlock();
+                    log_error("malloc x264_frame failed!");
+                    return -1;
+                }
             }
         }
 
+        /* create x264 encoder */
+        H264VENC_Params h264Params;
+        h264Params.ProfileId        = 100;
+        h264Params.FrameWidth       = width;
+        h264Params.FrameHeight      = height;
+        h264Params.LevelId          = 40;
+        h264Params.IdrFrameInterval = 60;
+        h264Params.OutputFormat     = 1;
+        h264Params.SarHeight        = 0;
+        h264Params.SarWidth         = 0;
+        h264Params.SlicePackMode    = 0;
+        h264Params.Transform8x8Flag = 1;
+        h264Params.InterPartition   = 1;
+        h264Params.RateControlMode  = 1;
+        h264Params.bitrate          = bitrate;
+        h264Params.FrameRate        = framerate;
+        h264Params.preset           = SuperFast;
+        h264Params.csp              = CSP_I420;
+
+        log_error("H264VENC_Create x264_frame %p", g_PushHandle[index].x264_frame);
+        g_PushHandle[index].x264_handle = H264VENC_Create(&h264Params);
+        if (NULL == g_PushHandle[index].x264_handle) {
+            log_error("H264VENC_Create failed!");
+            mutex.Unlock();
+            return -1;
+        }
+    } else {
+        if (framerate != config->framerate || bitrate != config->bitrate) {
+            H264VENC_DynamicParams h264DynamicParams;
+            h264DynamicParams.Deblock       = 1;
+            h264DynamicParams.ForceIFrame   = forcedI;
+            h264DynamicParams.SliceSize     = 0xFFFF;
+            h264DynamicParams.RcQMax        = 45;
+            h264DynamicParams.RcQMin        = 10;
+            h264DynamicParams.FrameRate     = framerate;
+            h264DynamicParams.TargetBitRate = bitrate;      // in kbps
+            H264_SetDynamicParams(g_PushHandle[index].x264_handle, &h264DynamicParams);
+        } else if (!forcedI) {
+            log_error("parameter are same as last");
+        }
     }
+
     mutex.Unlock();
     return index;
 }
@@ -198,11 +199,15 @@ int evils_live_start_push_stream(int index, char *url)
 int evils_live_stop_push_stream(int index)
 {
     bool flag = false;
+    log_error("stop push 1");
     mutex.Lock();
+    log_error("stop push 2");
     if (index >= 0 && index < MAX_PUSH_STREAMS) {
         if (g_PushHandle[index].is_exist) {
             if (g_PushHandle[index].rtmp_handle) {
+                log_error("stop push 1212 flag %d", flag);
                 g_PushHandle[index].rtmp_handle->Stop();
+                log_error("stop push 1212 Stop %d");
             }
             
             if (g_PushHandle[index].x264_handle) {
@@ -219,6 +224,7 @@ int evils_live_stop_push_stream(int index)
         }
     }
     mutex.Unlock();
+    log_error("stop push 3 flag %d", flag);
     return flag;
 }
 

@@ -112,7 +112,8 @@ Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass
     evils_live_stream_config(index, width, height, framerate, bitrate, forced);
 }
 
-jint Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass jc,
+JNIEXPORT jint JNICALL
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass jc,
                                                              jint index, jbyteArray url_) {
     int size = 0;
     char *url = ja2c(env, url_, &size);
@@ -126,7 +127,7 @@ jint Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, j
 JNIEXPORT void JNICALL
 Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jclass jc,
                                                             jint hanlder) {
-    log_error("url hujd");
+    //log_error("url hujd");
 
     // TODO
    evils_live_stop_push_stream(hanlder);

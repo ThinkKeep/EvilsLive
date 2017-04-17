@@ -27,9 +27,9 @@ extern "C"{
                                                                          jint index, jint width, jint height,
                                                                          jint framerate, jint bitrate, jboolean forced);
 
-    jint
+    JNIEXPORT jint JNICALL
         Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass jc,
-                                                                     jbyteArray url_);
+                                                                     jint index, jbyteArray url_);
     JNIEXPORT void JNICALL
         Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jclass jc,
                                                                     jint hanlder);
