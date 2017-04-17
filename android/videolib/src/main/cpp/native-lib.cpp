@@ -24,6 +24,7 @@ Java_com_thinkkeep_videolib_jni_EvilsLiveJni_init(JNIEnv *env, jclass jc) {
     // TODO
     gJniEnv = env;
     gJniJc = jc;
+    evils_live_init();
 }
 
 /**
@@ -72,6 +73,12 @@ private:
     char *mem;
 };
 
+JNIEXPORT jint JNICALL
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_createPushStream(JNIEnv *env, jclass jc, jint protocol) {
+    return evils_live_create_push_stream(protocol);
+}
+
+
 void JNICALL
 Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jclass jc, jint index,
                                                         jbyteArray j_data, jint width_, jint height_) {
@@ -99,36 +106,36 @@ Java_com_thinkkeep_videolib_jni_EvilsLiveJni_sendStream(JNIEnv *env, jclass jc, 
 
 JNIEXPORT void JNICALL
 Java_com_thinkkeep_videolib_jni_EvilsLiveJni_setStreamConfig(JNIEnv *env, jclass jc,
-                                                             jbyteArray url_) {
-
-    jbyte *url = env->GetByteArrayElements(url_, NULL);
-    // TODO
-
-    env->ReleaseByteArrayElements(url_, url, 0);
+                                                             jint index, jint width, jint height,
+                                                             jint framerate, jint bitrate, jboolean forced) {
+    //
+    evils_live_stream_config(index, width, height, framerate, bitrate, forced);
 }
 
-jint Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass jc,
-                                                             jbyteArray url_) {
+JNIEXPORT jint JNICALL
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_startPushStream(JNIEnv *env, jclass jc,
+                                                             jint index, jbyteArray url_) {
     int size = 0;
     char *url = ja2c(env, url_, &size);
     AutoFree afdata(url);
     // TODO
-    log_error("url fff hujd");
-    evils_live_init();
-    int index = evils_live_start_push_stream(0, url);
-    log_error("url fff hujd %s, %d", url, index);
+    int ret = evils_live_start_push_stream(index, url);
 
-    return index;
+    return ret;
 }
 
 JNIEXPORT void JNICALL
 Java_com_thinkkeep_videolib_jni_EvilsLiveJni_stopPushStream(JNIEnv *env, jclass jc,
                                                             jint hanlder) {
-    log_error("url hujd");
+    //log_error("url hujd");
 
     // TODO
    evils_live_stop_push_stream(hanlder);
-   //evils_live_destory();
+}
+
+JNIEXPORT void JNICALL
+Java_com_thinkkeep_videolib_jni_EvilsLiveJni_destroy(JNIEnv *env, jclass jc) {
+    evils_live_destory();
 }
 
 

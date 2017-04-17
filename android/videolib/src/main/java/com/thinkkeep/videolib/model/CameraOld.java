@@ -26,14 +26,15 @@ public class CameraOld implements CameraSupport {
     private Camera camera;
 
     private OnPreviewFrameListener listener;
+    private Size size;
 
 
-    static final class Size {
-        final int withd;
-        final int height;
+    public static final class Size {
+        public final int width;
+        public final int height;
 
         Size(int width, int height) {
-            this.withd = width;
+            this.width = width;
             this.height = height;
         }
     }
@@ -45,7 +46,7 @@ public class CameraOld implements CameraSupport {
             int width = camera.getParameters().getPreviewSize().width;
             int height = camera.getParameters().getPreviewSize().height;
             int index = JniManager.getInstance().getIndex();
-//            Log.e(TAG, "onPreviewFrame: "+ index);
+            //Log.e(TAG, "onPreviewFrame: "+ index);
             if (index >= 0) {
                 //Log.e(TAG, "onPreviewFrame: "+ index);
 
@@ -74,7 +75,7 @@ public class CameraOld implements CameraSupport {
         if (config != null && this.camera != null) {
             String streamUrl = config.getStreamUrl();
             if (streamUrlValid(streamUrl)) {
-                JniManager.getInstance().startPushStream(streamUrl.getBytes());
+                JniManager.getInstance().startPushStream(size, streamUrl.getBytes(), 15, 512);
                 camera.setPreviewCallback(callback);
             }
         }
@@ -122,15 +123,15 @@ public class CameraOld implements CameraSupport {
     @NonNull
     private Camera.Parameters setParameters() {
         Camera.Parameters parameters = camera.getParameters();
-        Size size = choosePreviewSize(parameters);
+        size = choosePreviewSize(parameters);
 
         //TODO 设置预览方向
         camera.setDisplayOrientation(90);
         //TODO 设置拍照之后方向
         parameters.setRotation(90);
 
-        parameters.setPreviewSize(size.withd, size.height);
-        parameters.setPictureSize(size.withd, size.height);
+        parameters.setPreviewSize(size.width, size.height);
+        parameters.setPictureSize(size.width, size.height);
 
         int imageFormat = chooseImageFormat(parameters);
 
