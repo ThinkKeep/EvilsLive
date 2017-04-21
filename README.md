@@ -21,6 +21,9 @@ EvilsLive 是一个视频直播件开发工具包(SDK), 目前只支持 Android�
 * [ ] 音视频目标码率：可设
 
 ## 项目结构
++ android/app：这里是测试的 sameple
++ android/videolib: 直播相关核心功能实现
++ doc： 文档说明
 
 ## Snapshot
 
