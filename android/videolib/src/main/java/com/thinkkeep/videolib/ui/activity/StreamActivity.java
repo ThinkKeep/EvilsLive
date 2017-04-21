@@ -24,7 +24,7 @@ public class StreamActivity extends AppCompatActivity {
     }
 
     private void initCameara(int cameraId) {
-        CameraSupport camera = this.cameraSupport.open(cameraId);
+        CameraSupport camera = this.cameraSupport.open();
 
     }
 }

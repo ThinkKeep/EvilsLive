@@ -63,8 +63,8 @@ public class EvilsLiveStreamer {
     /**
      * 开始预览
      */
-    public void startPreview(int cameraId) {
-        cameraSupport.open(cameraId);
+    public void startPreview() {
+        cameraSupport.open();
     }
 
     /**

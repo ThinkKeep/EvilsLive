@@ -13,10 +13,9 @@ public interface CameraSupport {
 
     /**
      * 打开Camera
-     * @param cameraId 前置或后置
      * @return Camera实例
      */
-    CameraSupport open(int cameraId);
+    CameraSupport open();
 
     /**
      * 开始推流
