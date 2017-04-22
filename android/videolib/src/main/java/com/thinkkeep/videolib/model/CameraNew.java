@@ -2,10 +2,7 @@ package com.thinkkeep.videolib.model;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
@@ -93,7 +90,7 @@ public class CameraNew implements CameraSupport {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public CameraSupport open(final int cameraId) {
+    public CameraSupport open() {
         try {
             startCamera2Thread();
 
@@ -139,7 +136,8 @@ public class CameraNew implements CameraSupport {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "open: jjjj");
             }
-            manager.openCamera(cameraIds[cameraId], deviceCallback, mHandler);
+            // TODO 先只预览背面的摄像头
+            manager.openCamera(cameraIds[0], deviceCallback, mHandler);
 
         } catch (Exception e) {
             Log.e(TAG, "open: " + Log.getStackTraceString(e));

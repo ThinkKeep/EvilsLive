@@ -6,10 +6,13 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewGroup;
 
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
+import com.thinkkeep.videolib.jni.EvilsLiveJni;
 import com.thinkkeep.videolib.util.Defines;
 import com.thinkkeep.videolib.jni.JniManager;
+import com.thinkkeep.videolib.util.ThreadUtil;
 
 import java.util.List;
 
@@ -27,6 +30,7 @@ public class CameraOld implements CameraSupport {
 
     private OnPreviewFrameListener listener;
     private Size size;
+    private int cameraId;
 
 
     public static final class Size {
@@ -39,6 +43,12 @@ public class CameraOld implements CameraSupport {
         }
     }
 
+//    static final int MAX_SIZE = 64;//must 2 mul
+//    RingBuffer mRingBuffer;
+//    void initRingBuffer(){
+//        mRingBuffer = new RingBuffer(MAX_SIZE, mVideoFrame.capacity());
+//    }
+
     private Camera.PreviewCallback callback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
@@ -49,8 +59,7 @@ public class CameraOld implements CameraSupport {
             //Log.e(TAG, "onPreviewFrame: "+ index);
             if (index >= 0) {
                 //Log.e(TAG, "onPreviewFrame: "+ index);
-
-                JniManager.getInstance().sendStream(index, data, width, height);
+                EvilsLiveJni.sendStream(index, data, width, height);
             }
             if (listener != null) {
                 listener.onPreviewFrameListener(data, width, height);
@@ -63,11 +72,23 @@ public class CameraOld implements CameraSupport {
 
 
     @Override
-    public CameraSupport open(final int cameraId) {
+    public CameraSupport open() {
+        cameraId = getCameraId();
         this.camera = Camera.open(cameraId);
 
         startPreview();
         return this;
+    }
+
+    private int getCameraId() {
+        int cameraId = Defines.EcameraFacing.CAMERA_FACING_FRONT.index;
+        if (config != null) {
+            Defines.EcameraFacing cameraFacing = config.getCameraFacing();
+            if (cameraFacing != null) {
+                cameraId = cameraFacing.index;
+            }
+        }
+        return cameraId;
     }
 
     @Override
@@ -102,18 +123,25 @@ public class CameraOld implements CameraSupport {
 
     private void startPreview() {
         try {
-
+            Camera.Parameters parameters = setParameters();
+            camera.setParameters(parameters);
             if (surfaceView != null) {
+                Camera.Size previewSize = parameters.getPreviewSize();
+                int previewWidth = previewSize.width;
+                int previewHeight = previewSize.height;
+                //fixed 预览画面中物体被拉伸变形, 因为旋转90度
+                ViewGroup.LayoutParams layoutParams = surfaceView.getLayoutParams();
+                layoutParams.width = previewHeight;
+                layoutParams.height = previewWidth;
                 SurfaceHolder surfaceHolder = surfaceView.getHolder();
-//                surfaceHolder.setFixedSize(720, 480);
+                surfaceHolder.setSizeFromLayout();
+                //设置分辨率
+//                surfaceHolder.setFixedSize(previewWidth, previewHeight);
 //                surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
                 camera.setPreviewDisplay(surfaceHolder);
 
             }
 
-            Camera.Parameters parameters = setParameters();
-
-            camera.setParameters(parameters);
             camera.startPreview();
         } catch (Exception e) {
             Log.e(TAG, "startPreview: error" + Log.getStackTraceString(e));
@@ -125,8 +153,12 @@ public class CameraOld implements CameraSupport {
         Camera.Parameters parameters = camera.getParameters();
         size = choosePreviewSize(parameters);
 
-        //TODO 设置预览方向
-        camera.setDisplayOrientation(90);
+        setPreviewFrameRate(parameters);
+
+        //设置预览方向
+        //if (cameraId == Camera.CameraInfo.CAMERA_FACING_BACK) {
+            camera.setDisplayOrientation(90);
+        //}
         //TODO 设置拍照之后方向
         parameters.setRotation(90);
 
@@ -139,6 +171,25 @@ public class CameraOld implements CameraSupport {
 
 
         return parameters;
+    }
+
+    private void setPreviewFrameRate(Camera.Parameters parameters) {
+        int frameRate = Defines.DEFAULT_FRAME_RATE;
+        if (config != null ) {
+            int previewFrameRate = config.getPreviewFrameRate();
+            if (previewFrameRate >= 0) {
+                frameRate = previewFrameRate;
+            }
+        }
+//        List<int[]> supportedPreviewFpsRange = parameters.getSupportedPreviewFpsRange();
+//        Log.d(TAG, "setPreviewFrameRate: hujd fps: " + supportedPreviewFpsRange);
+//        for (int[] arg : supportedPreviewFpsRange) {
+//            for (int k = 0; k < arg.length; k++) {
+//                Log.d(TAG, "setPreviewFrameRate: hujd fps: " + arg[k]);
+//            }
+//        }
+        parameters.setPreviewFpsRange( 25 * 1000, 25 * 1000);
+//        parameters.setPreviewFrameRate(frameRate);
     }
 
     private int chooseImageFormat(Camera.Parameters parameters) {
@@ -159,27 +210,57 @@ public class CameraOld implements CameraSupport {
     private Size choosePreviewSize(Camera.Parameters parameters) {
         Size size = null;
         if (config == null) {
-            return new Size(Defines.EVIDEO_RESOLUTION.E640P.getWidth(), Defines.EVIDEO_RESOLUTION.E640P.getHeight());
+            return new Size(Defines.EvideoResolution.E640P.getWidth(), Defines.EvideoResolution.E640P.getHeight());
         }
 
-        Defines.EVIDEO_RESOLUTION videoResolution = config.getVideoResolution();
+        Defines.EvideoResolution videoResolution = config.getVideoResolution();
         if (videoResolution != null) {
-                      int width = videoResolution.getWidth();
+            int width = videoResolution.getWidth();
             int height = videoResolution.getHeight();
             List<Camera.Size> sizeList = parameters.getSupportedPreviewSizes();
-            for (Camera.Size cur : sizeList) {
-                Log.e(TAG, "size==" + cur.width + " " + cur.height);
-                if (cur.width == width && cur.height == height) {
-                    size = new Size(width, height);
-                    break;
-                }
-            }
+            Camera.Size optimalSize = getOptimalSize(sizeList,  Math.max(width, height), Math.min(width, height));
+            size = new Size(optimalSize.width, optimalSize.height);
         }
         if (size == null) {
-            size = new Size(Defines.EVIDEO_RESOLUTION.E640P.getWidth(), Defines.EVIDEO_RESOLUTION.E640P.getHeight());
+            size = new Size(Defines.EvideoResolution.E640P.getWidth(), Defines.EvideoResolution.E640P.getHeight());
         }
 
         return size;
+    }
+
+    private Camera.Size getOptimalSize(@NonNull List<Camera.Size> sizes, int width, int height) {
+        final double ASPECT_TOLERANCE = 0.1;
+
+        assert(width == 0);
+
+        double targetRatio = (double) height / width;
+        Camera.Size optimalSize = null;
+        double minDiff = Double.MIN_VALUE;
+
+        int targetHeight = height;
+
+        for (Camera.Size size : sizes) {
+            double ratio = (double) size.width /size.height;
+            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE ) {
+                continue;
+            }
+            if (Math.abs(size.height - targetHeight) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(size.height = targetHeight);
+            }
+        }
+
+        if (optimalSize == null) {
+            minDiff = Double.MIN_VALUE;
+            for (Camera.Size size : sizes) {
+                if (Math.abs(size.height - targetHeight) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.height - targetHeight);
+                }
+            }
+        }
+
+        return optimalSize;
     }
 
     @Override

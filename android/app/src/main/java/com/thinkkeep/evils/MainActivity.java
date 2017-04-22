@@ -12,6 +12,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
@@ -27,6 +28,7 @@ import com.thinkkeep.videolib.api.EvilsLiveStreamer;
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
 import com.thinkkeep.videolib.jni.EvilsLiveJni;
 import com.thinkkeep.videolib.model.CameraSupport;
+import com.thinkkeep.videolib.util.Defines;
 
 import javax.inject.Inject;
 
@@ -79,6 +81,10 @@ public class MainActivity extends AppCompatActivity
 
         streamer = new EvilsLiveStreamer(this);
 
+//        ViewGroup.LayoutParams layoutParams = mPreviewView.getLayoutParams();
+//        layoutParams.width = 640;
+//        layoutParams.height = 480;
+//        mPreviewView.setLayoutParams(layoutParams);
         SurfaceHolder holder = mPreviewView.getHolder();
         holder.addCallback(this);
 
@@ -102,7 +108,18 @@ public class MainActivity extends AppCompatActivity
     @OnClick(R.id.switch_camera)
     void onClickSwitchBtn() {
         cameraId = 1 - cameraId;
-        start(cameraId);
+        Defines.EcameraFacing facing;
+        if (cameraId == 0) {
+            facing = Defines.EcameraFacing.CAMERA_FACING_BACK;
+        } else {
+            facing = Defines.EcameraFacing.CAMERA_FACING_FRONT;
+        }
+        builder.setCameraFacing(facing);
+        EvilsLiveStreamerConfig config = builder.build();
+        streamer.setStreamConfig(config);
+        streamer.stopStream();
+        streamer.stopPreview();
+        streamer.startPreview();
     }
 
     @OnClick(R.id.start)
@@ -142,13 +159,14 @@ public class MainActivity extends AppCompatActivity
         PermissionsActivity.startActivityForResult(this, REQUEST_CODE, PERMISSIONS);
     }
 
-    private void start(int cameraId) {
+    private void start() {
         builder = EvilsLiveStreamerConfig.Builder.newBuilder();
+        builder.setCameraFacing(Defines.EcameraFacing.CAMERA_FACING_BACK);
         EvilsLiveStreamerConfig config = builder.build();
         streamer.setDisplayPreview(mPreviewView);
         streamer.setStreamConfig(config);
         streamer.stopPreview();
-        streamer.startPreview(cameraId);
+        streamer.startPreview();
     }
 
     @Override
@@ -211,12 +229,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        start(cameraId);
+        start();
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-        surfaceHolder.setFixedSize(i, i1);
+        Log.d(TAG, "surfaceChanged: hujd w: " + i1 + " h: " + i2);
+//        surfaceHolder.setFixedSize(i, i1);
     }
 
     @Override

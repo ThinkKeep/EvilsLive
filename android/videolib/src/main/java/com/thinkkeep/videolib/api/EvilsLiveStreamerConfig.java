@@ -4,7 +4,7 @@ import android.graphics.ImageFormat;
 
 import com.thinkkeep.videolib.util.Defines;
 
-import static com.thinkkeep.videolib.util.Defines.EVIDEO_RESOLUTION.E640P;
+import static com.thinkkeep.videolib.util.Defines.EvideoResolution.E640P;
 
 /**
  * Created by jason on 17/3/16.
@@ -18,17 +18,16 @@ public class EvilsLiveStreamerConfig {
         DEFAULT_INSTANCE = new EvilsLiveStreamerConfig();
     }
 
-    private int frameRate;
-
     private String streamUrl;
 
-    private Defines.EENCODE_METHOD encodeMethod;
+    private Defines.EencodeMethod encodeMethod;
 
-    private Defines.EVIDEO_RESOLUTION videoresolution;
-
-    private boolean frontCamera;
+    private Defines.EvideoResolution videoresolution;
 
     private int imageFormat;
+    private int previewFrameRate;
+    private int encodeFrameRate;
+    private Defines.EcameraFacing cameraFacing;
 
 
     private EvilsLiveStreamerConfig(Builder builder) {
@@ -36,20 +35,23 @@ public class EvilsLiveStreamerConfig {
     }
 
     private EvilsLiveStreamerConfig() {
-        this.frameRate = 20;
-        this.frontCamera = false;
         this.streamUrl = "";
         this.videoresolution = E640P;
-        this.encodeMethod = Defines.EENCODE_METHOD.SOFTWARE_ENCODE;
+        this.encodeMethod = Defines.EencodeMethod.SOFTWARE_ENCODE;
         this.imageFormat = ImageFormat.NV21;
+        this.previewFrameRate = Defines.DEFAULT_FRAME_RATE;
+        this.encodeFrameRate = Defines.DEFAULT_FRAME_RATE;
+        this.cameraFacing = Defines.EcameraFacing.CAMERA_FACING_FRONT;
     }
 
     private void builder(Builder builder) {
-        this.frameRate = builder.frameRate;
         this.streamUrl = builder.streamUrl;
         this.encodeMethod = builder.encodeMethod;
+        this.imageFormat = builder.imageFormat;
         this.videoresolution = builder.videoresolution;
-        this.frontCamera = builder.frontCamera;
+        this.previewFrameRate = builder.previewFrameRate;
+        this.encodeFrameRate = builder.encodeFrameRate;
+        this.cameraFacing = builder.cameraFacing;
     }
 
     /**
@@ -59,15 +61,6 @@ public class EvilsLiveStreamerConfig {
     public int getImageFormat() {
         return imageFormat;
     }
-
-    /**
-     * 获取推流帧率
-     * @return rate
-     */
-    public int getFrameRate() {
-        return frameRate;
-    }
-
 
     /**
      * 获取推流url
@@ -81,7 +74,7 @@ public class EvilsLiveStreamerConfig {
      * 获取视频编码方式
      * @return resolution
      */
-    public Defines.EENCODE_METHOD getEncodeMethod() {
+    public Defines.EencodeMethod getEncodeMethod() {
         return encodeMethod;
     }
 
@@ -90,43 +83,48 @@ public class EvilsLiveStreamerConfig {
      * 获取视频分辨率
      * @return resolution
      */
-    public Defines.EVIDEO_RESOLUTION getVideoResolution() {
+    public Defines.EvideoResolution getVideoResolution() {
         return videoresolution;
     }
 
-
     /**
-     * 获取是否是前置摄像头
-     * @return true/false
+     * 获取预览帧率
+     * @return
      */
-    public boolean getFrontCamera() {
-        return frontCamera;
+    public int getPreviewFrameRate() {
+        return previewFrameRate;
     }
 
+    /**
+     * 获取视频编码帧率
+     * @return framerate
+     */
+    public int getEncodeFrameRate() {
+        return encodeFrameRate;
+    }
+
+    /**
+     * 获取摄像头状态
+     * @return 前置/后置
+     */
+    public Defines.EcameraFacing getCameraFacing() {
+        return cameraFacing;
+    }
 
     public static final class Builder {
-
-        private int frameRate;
-
         private String streamUrl;
 
-        private Defines.EENCODE_METHOD encodeMethod;
+        private Defines.EencodeMethod encodeMethod;
 
-        private Defines.EVIDEO_RESOLUTION videoresolution;
-
-        private boolean frontCamera;
+        private Defines.EvideoResolution videoresolution;
 
         private int imageFormat;
 
-        private Builder() {
-        }
+        private int previewFrameRate;
+        private int encodeFrameRate;
+        public Defines.EcameraFacing cameraFacing;
 
-        /**
-         * 设置前置摄像头
-         * @param frontCamera
-         */
-        public void setFrontCamera(boolean frontCamera) {
-            this.frontCamera = frontCamera;
+        private Builder() {
         }
 
         /**
@@ -141,16 +139,8 @@ public class EvilsLiveStreamerConfig {
          * 设置视频编码方式
          * @param encodeMethod 软编码/硬编码
          */
-        public void setEncodeMethod(Defines.EENCODE_METHOD encodeMethod) {
+        public void setEncodeMethod(Defines.EencodeMethod encodeMethod) {
             this.encodeMethod = encodeMethod;
-        }
-
-        /**
-         * 设置推流帧率
-         * @param frameRate rate
-         */
-        public void setFrameRate(int frameRate) {
-            this.frameRate = frameRate;
         }
 
         /**
@@ -163,6 +153,30 @@ public class EvilsLiveStreamerConfig {
 
         public static Builder newBuilder() {
             return DEFAULT_INSTANCE.toBuilder();
+        }
+
+        /**
+         * 设置视频预览帧率
+         * @param previewFrameRate frameRate
+         */
+        public void setPreviewFrameRate(int previewFrameRate) {
+            this.previewFrameRate = previewFrameRate;
+        }
+
+        /**
+         * 设置视频编码帧率
+         * @param encodeFrameRate frameRate
+         */
+        public void setEncodeFrameRate(int encodeFrameRate) {
+            this.encodeFrameRate = encodeFrameRate;
+        }
+
+        /**
+         * 设置预览摄像头
+         * @param cameraFacing facing
+         */
+        public void setCameraFacing(Defines.EcameraFacing cameraFacing) {
+            this.cameraFacing = cameraFacing;
         }
 
         public EvilsLiveStreamerConfig build() {
@@ -181,6 +195,9 @@ public class EvilsLiveStreamerConfig {
         builder.encodeMethod = DEFAULT_INSTANCE.encodeMethod;
         builder.videoresolution = DEFAULT_INSTANCE.videoresolution;
         builder.imageFormat = DEFAULT_INSTANCE.imageFormat;
+        builder.previewFrameRate = DEFAULT_INSTANCE.previewFrameRate;
+        builder.encodeFrameRate = DEFAULT_INSTANCE.encodeFrameRate;
+        builder.cameraFacing = DEFAULT_INSTANCE.cameraFacing;
         return builder;
     }
 }
