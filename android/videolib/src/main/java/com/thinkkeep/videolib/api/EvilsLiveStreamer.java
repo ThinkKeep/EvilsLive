@@ -1,10 +1,10 @@
 package com.thinkkeep.videolib.api;
 
 import android.content.Context;
-import android.opengl.GLSurfaceView;
 import android.view.SurfaceView;
 
 import com.thinkkeep.videolib.di.component.CameraComponent;
+import com.thinkkeep.videolib.model.CameraHandlerThread;
 import com.thinkkeep.videolib.model.CameraSupport;
 import com.thinkkeep.videolib.model.OnPreviewFrameListener;
 
@@ -17,6 +17,7 @@ import javax.inject.Inject;
 public class EvilsLiveStreamer {
 
     private final Context context;
+    private final CameraHandlerThread mThread;
     @Inject
     CameraSupport cameraSupport;
     private EvilsLiveStreamerConfig streamerConfig;
@@ -32,6 +33,7 @@ public class EvilsLiveStreamer {
         EvilsLiveStreamerConfig.Builder builder = EvilsLiveStreamerConfig.Builder.newBuilder();
         setStreamConfig(builder.build());
 
+        mThread = new CameraHandlerThread("camera thread");
     }
 
     /**
@@ -64,7 +66,7 @@ public class EvilsLiveStreamer {
      * 开始预览
      */
     public void startPreview() {
-        cameraSupport.open();
+        mThread.openCamera(cameraSupport);
     }
 
     /**

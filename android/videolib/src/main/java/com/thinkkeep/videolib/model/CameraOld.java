@@ -2,7 +2,6 @@ package com.thinkkeep.videolib.model;
 
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
-import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -10,8 +9,10 @@ import android.view.SurfaceView;
 import android.view.ViewGroup;
 
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
+import com.thinkkeep.videolib.jni.EvilsLiveJni;
 import com.thinkkeep.videolib.util.Defines;
 import com.thinkkeep.videolib.jni.JniManager;
+import com.thinkkeep.videolib.util.ThreadUtil;
 
 import java.util.List;
 
@@ -42,6 +43,12 @@ public class CameraOld implements CameraSupport {
         }
     }
 
+//    static final int MAX_SIZE = 64;//must 2 mul
+//    RingBuffer mRingBuffer;
+//    void initRingBuffer(){
+//        mRingBuffer = new RingBuffer(MAX_SIZE, mVideoFrame.capacity());
+//    }
+
     private Camera.PreviewCallback callback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
@@ -52,7 +59,7 @@ public class CameraOld implements CameraSupport {
             //Log.e(TAG, "onPreviewFrame: "+ index);
             if (index >= 0) {
                 //Log.e(TAG, "onPreviewFrame: "+ index);
-                JniManager.getInstance().sendStream(index, data, width, height);
+                EvilsLiveJni.sendStream(index, data, width, height);
             }
             if (listener != null) {
                 listener.onPreviewFrameListener(data, width, height);
@@ -126,7 +133,6 @@ public class CameraOld implements CameraSupport {
                 ViewGroup.LayoutParams layoutParams = surfaceView.getLayoutParams();
                 layoutParams.width = previewHeight;
                 layoutParams.height = previewWidth;
-                surfaceView.setLayoutParams(layoutParams);
                 SurfaceHolder surfaceHolder = surfaceView.getHolder();
                 surfaceHolder.setSizeFromLayout();
                 //设置分辨率
