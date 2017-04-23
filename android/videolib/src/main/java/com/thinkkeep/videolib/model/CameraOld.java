@@ -56,7 +56,7 @@ public class CameraOld implements CameraSupport {
             int width = camera.getParameters().getPreviewSize().width;
             int height = camera.getParameters().getPreviewSize().height;
             int index = JniManager.getInstance().getIndex();
-            Log.e(TAG, "hujd onPreviewFrame: "+ index);
+            //Log.e(TAG, "hujd onPreviewFrame: "+ index);
 
             if (index >= 0) {
                 //Log.e(TAG, "onPreviewFrame: "+ index);
