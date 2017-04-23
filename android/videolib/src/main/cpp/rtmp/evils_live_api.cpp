@@ -224,7 +224,7 @@ int evils_live_stop_push_stream(int index)
         }
     }
     mutex.Unlock();
-    log_error("stop push 3 flag %d", flag);
+    //log_error("stop push 3 flag %d", flag);
     return flag;
 }
 
@@ -249,8 +249,13 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
     mutex.Lock();
     //log_error("evils_live_send_yuv420 index %d (yvv420 %p yuv_len %d width %d, height %d)", index, yuv420, yuv_len, width, height);
     if (index >= 0 && index < MAX_PUSH_STREAMS) {
-
+        //log_error("g_PushHandle[index].rtmp_handle %p ", g_PushHandle[index].rtmp_handle);
         pRtmp = g_PushHandle[index].rtmp_handle;
+        if (NULL == pRtmp) {
+            log_error("rtmp has NOT been created");
+            mutex.Unlock();
+            return -3;
+        }
         if (!pRtmp->IsConnected()) {
             log_error("rtmp has NOT been connected to server ignore this yuv");
             mutex.Unlock();
