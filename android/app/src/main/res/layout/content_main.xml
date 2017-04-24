@@ -38,7 +38,13 @@
         android:layout_marginLeft="20dp"
         android:text="启流" />
 
-
+    <Button
+        android:id="@+id/audioBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:text="播放音频"
+        />
     <!--<Button-->
         <!--android:id="@+id/text_hello"-->
         <!--android:layout_width="wrap_content"-->

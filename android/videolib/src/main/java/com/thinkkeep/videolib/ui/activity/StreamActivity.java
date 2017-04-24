@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.thinkkeep.videolib.R;
-import com.thinkkeep.videolib.model.CameraSupport;
+import com.thinkkeep.videolib.model.video.CameraSupport;
 
 import javax.inject.Inject;
 

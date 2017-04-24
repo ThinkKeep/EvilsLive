@@ -2,8 +2,7 @@ package com.thinkkeep.videolib.jni;
 
 import android.util.Log;
 
-import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
-import com.thinkkeep.videolib.model.CameraOld;
+import com.thinkkeep.videolib.model.video.CameraOld;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 

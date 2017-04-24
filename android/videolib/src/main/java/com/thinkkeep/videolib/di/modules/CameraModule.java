@@ -1,12 +1,10 @@
 package com.thinkkeep.videolib.di.modules;
 
 import android.content.Context;
-import android.os.Build;
 
 import com.thinkkeep.videolib.jni.JniManager;
-import com.thinkkeep.videolib.model.CameraNew;
-import com.thinkkeep.videolib.model.CameraOld;
-import com.thinkkeep.videolib.model.CameraSupport;
+import com.thinkkeep.videolib.model.video.CameraOld;
+import com.thinkkeep.videolib.model.video.CameraSupport;
 
 import dagger.Module;
 import dagger.Provides;

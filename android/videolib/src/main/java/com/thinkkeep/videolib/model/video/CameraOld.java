@@ -1,4 +1,4 @@
-package com.thinkkeep.videolib.model;
+package com.thinkkeep.videolib.model.video;
 
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
@@ -10,8 +10,8 @@ import android.view.ViewGroup;
 
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
 import com.thinkkeep.videolib.jni.EvilsLiveJni;
-import com.thinkkeep.videolib.jni.JniManager;
 import com.thinkkeep.videolib.util.Defines;
+import com.thinkkeep.videolib.jni.JniManager;
 
 import java.util.List;
 
@@ -56,7 +56,7 @@ public class CameraOld implements CameraSupport {
             int width = camera.getParameters().getPreviewSize().width;
             int height = camera.getParameters().getPreviewSize().height;
             int index = JniManager.getInstance().getIndex();
-            //Log.e(TAG, "hujd onPreviewFrame: "+ index);
+//            Log.e(TAG, "hujd onPreviewFrame: "+ index);
 
             if (index >= 0) {
                 //Log.e(TAG, "onPreviewFrame: "+ index);
