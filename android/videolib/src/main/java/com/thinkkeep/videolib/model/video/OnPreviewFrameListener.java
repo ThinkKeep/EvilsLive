@@ -1,4 +1,4 @@
-package com.thinkkeep.videolib.model;
+package com.thinkkeep.videolib.model.video;
 
 /**
  * Created by jsson on 17/3/16.

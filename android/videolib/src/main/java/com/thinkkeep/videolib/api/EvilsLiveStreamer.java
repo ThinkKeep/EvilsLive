@@ -4,9 +4,9 @@ import android.content.Context;
 import android.view.SurfaceView;
 
 import com.thinkkeep.videolib.di.component.CameraComponent;
-import com.thinkkeep.videolib.model.CameraHandlerThread;
-import com.thinkkeep.videolib.model.CameraSupport;
-import com.thinkkeep.videolib.model.OnPreviewFrameListener;
+import com.thinkkeep.videolib.model.video.CameraHandlerThread;
+import com.thinkkeep.videolib.model.video.CameraSupport;
+import com.thinkkeep.videolib.model.video.OnPreviewFrameListener;
 
 import javax.inject.Inject;
 

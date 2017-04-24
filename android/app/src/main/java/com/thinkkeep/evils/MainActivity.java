@@ -27,7 +27,9 @@ import com.thinkkeep.evils.di.modules.ActivityModule;
 import com.thinkkeep.videolib.api.EvilsLiveStreamer;
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
 import com.thinkkeep.videolib.jni.EvilsLiveJni;
-import com.thinkkeep.videolib.model.CameraSupport;
+import com.thinkkeep.videolib.model.audio.AudioCapture;
+import com.thinkkeep.videolib.model.audio.AudioPlayer;
+import com.thinkkeep.videolib.model.video.CameraSupport;
 import com.thinkkeep.videolib.util.Defines;
 
 import javax.inject.Inject;
@@ -65,9 +67,12 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.switch_camera) Button mSwitchBtn;
     @Bind(R.id.start) Button startBtn;
     @Bind(R.id.edit_str) EditText urlEdit;
+    @Bind(R.id.audioBtn) Button audioBtn;
 
     private boolean isStartStream = true;
     private EvilsLiveStreamerConfig.Builder builder;
+    private AudioCapture audioCapture;
+    private AudioPlayer audioPlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +92,9 @@ public class MainActivity extends AppCompatActivity
 //        mPreviewView.setLayoutParams(layoutParams);
         SurfaceHolder holder = mPreviewView.getHolder();
         holder.addCallback(this);
+
+        audioCapture = new AudioCapture();
+        audioPlay = new AudioPlayer();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -139,6 +147,29 @@ public class MainActivity extends AppCompatActivity
             streamer.stopStream();
             startBtn.setText("推送流");
             isStartStream = true;
+        }
+    }
+
+    @OnClick(R.id.audioBtn)
+    void onClickAudioPlay(){
+        Log.e(TAG, "onClickAudioPlay: hujd" + audioCapture.isCaptureStarted());
+        if (audioCapture.isCaptureStarted()) {
+            audioCapture.stopCapture();
+            audioPlay.stopPlayer();
+            audioBtn.setText("音频播放");
+        } else {
+            audioCapture.setOnAudioFrameCapturedListener(new AudioCapture.OnAudioFrameCapturedListener() {
+                @Override
+                public void onAudioFrameCaptured(byte[] audioData) {
+                    audioPlay.play(audioData, 0, audioData.length);
+                }
+            });
+            if (audioCapture.startCapture()) {
+                audioPlay.startPlayer();
+                audioBtn.setText("关闭音频播放");
+            } else {
+                Log.e(TAG, "onClickAudioPlay: failed");
+            }
         }
     }
 

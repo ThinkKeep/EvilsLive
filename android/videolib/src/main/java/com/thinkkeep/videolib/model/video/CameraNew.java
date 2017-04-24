@@ -1,4 +1,4 @@
-package com.thinkkeep.videolib.model;
+package com.thinkkeep.videolib.model.video;
 
 import android.Manifest;
 import android.annotation.TargetApi;
