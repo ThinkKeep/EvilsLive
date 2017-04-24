@@ -26,7 +26,7 @@ EvilsLive 是一个视频直播件开发工具包(SDK), 目前只支持 Android�
 + doc： 文档说明
 
 ## Snapshot
-![](https://rawgit.com/jasonim/evils/blob/master/snapshot/Screenshot_2017-04-24-19-58-07.png)
+<img src="snapshot/Screenshot_2017-04-24-19-58-07.png" height="400" alt="snapshot"/>
 ## Usage
 
 **要求:**
