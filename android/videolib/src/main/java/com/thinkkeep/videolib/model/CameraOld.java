@@ -10,9 +10,8 @@ import android.view.ViewGroup;
 
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
 import com.thinkkeep.videolib.jni.EvilsLiveJni;
-import com.thinkkeep.videolib.util.Defines;
 import com.thinkkeep.videolib.jni.JniManager;
-import com.thinkkeep.videolib.util.ThreadUtil;
+import com.thinkkeep.videolib.util.Defines;
 
 import java.util.List;
 
@@ -31,6 +30,7 @@ public class CameraOld implements CameraSupport {
     private OnPreviewFrameListener listener;
     private Size size;
     private int cameraId;
+    private boolean isStartStream;
 
 
     public static final class Size {
@@ -56,7 +56,8 @@ public class CameraOld implements CameraSupport {
             int width = camera.getParameters().getPreviewSize().width;
             int height = camera.getParameters().getPreviewSize().height;
             int index = JniManager.getInstance().getIndex();
-            //Log.e(TAG, "onPreviewFrame: "+ index);
+            //Log.e(TAG, "hujd onPreviewFrame: "+ index);
+
             if (index >= 0) {
                 //Log.e(TAG, "onPreviewFrame: "+ index);
                 EvilsLiveJni.sendStream(index, data, width, height);
@@ -98,6 +99,21 @@ public class CameraOld implements CameraSupport {
             if (streamUrlValid(streamUrl)) {
                 JniManager.getInstance().startPushStream(size, streamUrl.getBytes(), 15, 512);
                 camera.setPreviewCallback(callback);
+                isStartStream = true;
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (isStartStream) {
+                            int index = JniManager.getInstance().getIndex();
+                            try {
+                                Thread.sleep(3000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            JniManager.getInstance().setStreamConfig(index, size.width, size.height, 15, 512, true);
+                        }
+                    }
+                }).start();
             }
         }
 
@@ -275,6 +291,8 @@ public class CameraOld implements CameraSupport {
 
     @Override
     public void stopPushStream() {
+        isStartStream = false;
+
         if (camera == null) {
             return;
         }
