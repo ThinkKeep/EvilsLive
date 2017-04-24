@@ -14,6 +14,7 @@ typedef struct {
     int bitrate;
     int width;
     int height;
+    int forcedI;
 }StreamConfig;
 
 typedef struct {
@@ -100,7 +101,10 @@ int evils_live_stream_config(int index, int width, int height, int framerate, in
     mutex.Lock();
 
     StreamConfig *config = &g_PushHandle[index].config;
+
     if (width != config->width || height != config->height) {
+        config->width = width;
+        config->height = height;
         if (g_PushHandle[index].x264_handle) {
             /* close x264 encoder */
             H264VENC_Close(g_PushHandle[index].x264_handle);
@@ -146,17 +150,25 @@ int evils_live_stream_config(int index, int width, int height, int framerate, in
         if (framerate != config->framerate || bitrate != config->bitrate) {
             H264VENC_DynamicParams h264DynamicParams;
             h264DynamicParams.Deblock       = 1;
-            h264DynamicParams.ForceIFrame   = forcedI;
+            h264DynamicParams.ForceIFrame   = 0;
             h264DynamicParams.SliceSize     = 0xFFFF;
             h264DynamicParams.RcQMax        = 45;
             h264DynamicParams.RcQMin        = 10;
             h264DynamicParams.FrameRate     = framerate;
             h264DynamicParams.TargetBitRate = bitrate;      // in kbps
             H264_SetDynamicParams(g_PushHandle[index].x264_handle, &h264DynamicParams);
+
+            config->framerate = framerate;
+            config->bitrate = bitrate;
         } else if (!forcedI) {
             log_error("parameter are same as last");
         }
     }
+    config->forcedI = forcedI;
+    config->bitrate = bitrate;
+    config->framerate = framerate;
+    config->height = height;
+    config->width = width;
 
     mutex.Unlock();
     return index;
@@ -224,7 +236,7 @@ int evils_live_stop_push_stream(int index)
         }
     }
     mutex.Unlock();
-    log_error("stop push 3 flag %d", flag);
+    //log_error("stop push 3 flag %d", flag);
     return flag;
 }
 
@@ -249,8 +261,13 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
     mutex.Lock();
     //log_error("evils_live_send_yuv420 index %d (yvv420 %p yuv_len %d width %d, height %d)", index, yuv420, yuv_len, width, height);
     if (index >= 0 && index < MAX_PUSH_STREAMS) {
-
+        //log_error("g_PushHandle[index].rtmp_handle %p ", g_PushHandle[index].rtmp_handle);
         pRtmp = g_PushHandle[index].rtmp_handle;
+        if (NULL == pRtmp) {
+            log_error("rtmp has NOT been created");
+            mutex.Unlock();
+            return -3;
+        }
         if (!pRtmp->IsConnected()) {
             log_error("rtmp has NOT been connected to server ignore this yuv");
             mutex.Unlock();
@@ -259,7 +276,18 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
         /* x264 encode yuv to h264 */
         H264VENC_Handle x264_handle = g_PushHandle[index].x264_handle;
         YUV_POINTERS capture_frame;
-
+//check forcedI flag
+        if (g_PushHandle[index].config.forcedI) {
+            H264VENC_DynamicParams h264DynamicParams;
+            h264DynamicParams.Deblock       = 1;
+            h264DynamicParams.ForceIFrame   = 1;
+            h264DynamicParams.SliceSize     = 0xFFFF;
+            h264DynamicParams.RcQMax        = 45;
+            h264DynamicParams.RcQMin        = 10;
+            h264DynamicParams.FrameRate     = g_PushHandle[index].config.framerate;
+            h264DynamicParams.TargetBitRate = g_PushHandle[index].config.bitrate;      // in kbps
+            H264_SetDynamicParams(g_PushHandle[index].x264_handle, &h264DynamicParams);
+        }
         capture_frame.pu8Y = (unsigned char *)yuv420;
     	capture_frame.pu8U = (unsigned char *)yuv420 + width * height;
     	capture_frame.pu8V = (unsigned char *)yuv420 + width * height * 5 / 4;
@@ -270,6 +298,20 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
         int frame_size = H264_EncodeFrame(x264_handle, &capture_frame, g_PushHandle[index].x264_frame);
         if (frame_size > MAX_FRAME_SIZE || frame_size <= 4) {
             log_error("evils_live_send_yuv420 H264_EncodeFrame failed frame_size = %d", frame_size);
+        }
+
+        //check forcedI flag
+        if (g_PushHandle[index].config.forcedI) {
+            H264VENC_DynamicParams h264DynamicParams;
+            h264DynamicParams.Deblock       = 1;
+            h264DynamicParams.ForceIFrame   = 0;
+            h264DynamicParams.SliceSize     = 0xFFFF;
+            h264DynamicParams.RcQMax        = 45;
+            h264DynamicParams.RcQMin        = 10;
+            h264DynamicParams.FrameRate     = g_PushHandle[index].config.framerate;
+            h264DynamicParams.TargetBitRate = g_PushHandle[index].config.bitrate;      // in kbps
+            H264_SetDynamicParams(g_PushHandle[index].x264_handle, &h264DynamicParams);
+            g_PushHandle[index].config.forcedI = 0;
         }
 
         if (pRtmp && frame_size > 4) {
@@ -298,6 +340,9 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
                 slice_len = ntohl(slice_len);
                 uint32 ts = getTimeMs();
                 //log_error("SendAVC nalu type = %d slice len = %d time stamp = %u", frame[nalPos[i] + 4] & 0x1F, slice_len, ts);
+                if ((frame[nalPos[i] + 4] & 0x1F) == 5) {
+                    log_error("I frame！");
+                }
                 flag = pRtmp->SendAVC((char *)frame + nalPos[i] + 4, (int)slice_len, ts);
             }
         }
