@@ -30,7 +30,7 @@
         android:id="@+id/edit_str"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="rtmp://123.57.140.161/live/hjd_phone"/>
+        android:hint="rtmp://123.57.140.160/live/hjd_phone"/>
     <Button
         android:id="@+id/start"
         android:layout_width="wrap_content"
