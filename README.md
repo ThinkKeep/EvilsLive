@@ -34,7 +34,7 @@ EvilsLive 是一个视频直播件开发工具包(SDK), 目前只支持 Android�
 
 Android Studio >= 2.2.3
 
-api >= 19
+Android API >= 19
 
 **Step 1:**
 
