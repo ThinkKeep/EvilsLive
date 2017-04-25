@@ -42,7 +42,7 @@ Android API >= 19
 
 例如：rtmp://127.0.0.1/live/hjd_phone
 
-具体参照[ossrs/srs](https://github.com/ossrs/srs)搭建rtmp server
+具体可参照 [ossrs/srs](https://github.com/ossrs/srs) 搭建rtmp server
 
 **Step 2:**
 
