@@ -67,6 +67,7 @@ Android 版本： 6.0
 ## 遗留问题
 - [ ] 视频采集数据native层处理
 - [ ] 支持多种体系结构
+- [ ] 支持 Web/IOS 平台
 
 ## Copyright and License
 Copyright 2016-2017 ThinkKeep
