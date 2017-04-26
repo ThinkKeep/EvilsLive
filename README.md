@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/ThinkKeep/EvilsLive.svg?branch=master)](https://travis-ci.org/ThinkKeep/EvilsLive)
 
 ## 项目介绍
-EvilsLive 是一个视频直播件开发工具包(SDK), 目前只支持 Android， 主要负责视频直播的采集、推流、预览、播放、美图支持。
+EvilsLive 是一个视频直播件开发工具包(SDK), 目前只支持 Android， 以后还会支持 Web/IOS 等平台。 主要负责视频直播的采集、推流、预览、播放、美图支持。
 
 **欢迎大家 Star， 你们的关注才是我们持续的动力!**
 
@@ -50,6 +50,11 @@ Android API >= 19
 
 具体如何使用可以参照 [app](https://github.com/ThinkKeep/EvilsLive/tree/master/android/app) 中的代码
 
+**测试环境：**
+
+Android 版本： 6.0
+
+硬件： HuaWei H60-L02
 
 ## TODO LIST
 - [x] 推流(视频)功能 
@@ -62,6 +67,7 @@ Android API >= 19
 ## 遗留问题
 - [ ] 视频采集数据native层处理
 - [ ] 支持多种体系结构
+- [ ] 支持 Web/IOS 平台
 
 ## Copyright and License
 Copyright 2016-2017 ThinkKeep
