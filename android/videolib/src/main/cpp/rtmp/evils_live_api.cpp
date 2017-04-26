@@ -10,6 +10,7 @@
 #define MAX_PUSH_STREAMS    (10)
 
 typedef struct {
+    int type;                   /**< 0:yuv420sp 1:nv21 2:other */
     int framerate;
     int bitrate;
     int width;
@@ -20,8 +21,11 @@ typedef struct {
 typedef struct {
     CLibRtmpPublishBase *   rtmp_handle;
     H264VENC_Handle         x264_handle;
-    StreamConfig            config;
     unsigned char *         x264_frame;
+    unsigned char *         y_plane;
+    unsigned char *         u_plane;
+    unsigned char *         v_plane;
+    StreamConfig            config;
     unsigned                index;
     bool                    is_exist;
 }PushHandle;
@@ -102,6 +106,8 @@ int evils_live_stream_config(int index, int width, int height, int framerate, in
 
     StreamConfig *config = &g_PushHandle[index].config;
 
+    config->type = 1;/**< nv21 default */
+
     if (width != config->width || height != config->height) {
         config->width = width;
         config->height = height;
@@ -115,6 +121,18 @@ int evils_live_stream_config(int index, int width, int height, int framerate, in
                 if (NULL == g_PushHandle[index].x264_frame) {
                     mutex.Unlock();
                     log_error("malloc x264_frame failed!");
+                    return -1;
+                }
+                g_PushHandle[index].u_plane = (unsigned char *)malloc(width * height / 4);
+                if (NULL == g_PushHandle[index].u_plane) {
+                    mutex.Unlock();
+                    log_error("malloc u_plane failed!");
+                    return -1;
+                }
+                g_PushHandle[index].v_plane = (unsigned char *)malloc(width * height / 4);
+                if (NULL == g_PushHandle[index].v_plane) {
+                    mutex.Unlock();
+                    log_error("malloc v_plane failed!");
                     return -1;
                 }
             }
@@ -231,6 +249,15 @@ int evils_live_stop_push_stream(int index)
                 free(g_PushHandle[index].x264_frame);
                 g_PushHandle[index].x264_frame = NULL;
             }
+            if (g_PushHandle[index].u_plane) {
+                free(g_PushHandle[index].u_plane);
+                g_PushHandle[index].u_plane = NULL;
+            }
+            if (g_PushHandle[index].v_plane) {
+                free(g_PushHandle[index].v_plane);
+                g_PushHandle[index].v_plane = NULL;
+            }
+            
             g_PushHandle[index].is_exist = false;
             flag = true;
         }
@@ -253,7 +280,7 @@ int evils_live_send_h264(int index, char *frame, int frame_len)
     return flag;
 }
 
-int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int height)
+static int evils_live_send_yuv(int index, YUV_POINTERS capture_frame)
 {
 
     bool flag = false;
@@ -275,7 +302,6 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
         }
         /* x264 encode yuv to h264 */
         H264VENC_Handle x264_handle = g_PushHandle[index].x264_handle;
-        YUV_POINTERS capture_frame;
 //check forcedI flag
         if (g_PushHandle[index].config.forcedI) {
             H264VENC_DynamicParams h264DynamicParams;
@@ -288,12 +314,6 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
             h264DynamicParams.TargetBitRate = g_PushHandle[index].config.bitrate;      // in kbps
             H264_SetDynamicParams(g_PushHandle[index].x264_handle, &h264DynamicParams);
         }
-        capture_frame.pu8Y = (unsigned char *)yuv420;
-    	capture_frame.pu8U = (unsigned char *)yuv420 + width * height;
-    	capture_frame.pu8V = (unsigned char *)yuv420 + width * height * 5 / 4;
-    	capture_frame.strideY = (unsigned int)width;
-    	capture_frame.strideU = (unsigned int)width / 2;
-    	capture_frame.strideV = (unsigned int)width / 2;
         //log_error("H264_EncodeFrame(%p, %d, %p) ", x264_handle, index, g_PushHandle[index].x264_frame);
         int frame_size = H264_EncodeFrame(x264_handle, &capture_frame, g_PushHandle[index].x264_frame);
         if (frame_size > MAX_FRAME_SIZE || frame_size <= 4) {
@@ -314,7 +334,7 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
             g_PushHandle[index].config.forcedI = 0;
         }
 
-        if (pRtmp && frame_size > 4) {
+        if (frame_size > 4) {
             unsigned char * frame = g_PushHandle[index].x264_frame;
             int nalPos[256];
             int nalPos_index = 0;
@@ -351,6 +371,48 @@ int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int
 
     return flag;
 }
+
+static YUV_POINTERS nv21toyuv420sp(int index, unsigned char *yuv420, int w, int h)
+{
+    YUV_POINTERS capture_frame;
+    capture_frame.pu8Y = yuv420;
+    capture_frame.pu8U = yuv420 + w * h;
+    capture_frame.pu8V = yuv420 + w * h * 5 / 4;
+    capture_frame.strideY = (unsigned int)w;
+    capture_frame.strideU = (unsigned int)w / 2;
+    capture_frame.strideV = (unsigned int)w / 2;
+
+    if (g_PushHandle[index].u_plane && g_PushHandle[index].v_plane) {
+        int uv_len = w * h / 2;
+        unsigned char *uv_data = capture_frame.pu8U;
+        for (int i = 0; i < uv_len; i += 2) {
+            g_PushHandle[index].v_plane[i / 2] = uv_data[i];
+            g_PushHandle[index].u_plane[i / 2] = uv_data[i + 1];
+        }
+        capture_frame.pu8U = g_PushHandle[index].u_plane;
+        capture_frame.pu8V = g_PushHandle[index].v_plane;
+    }
+
+    return capture_frame;
+
+}
+
+int evils_live_send_yuv420(int index, char * yuv420, int yuv_len, int width, int height)
+{
+    YUV_POINTERS capture_frame;
+    if (1 == g_PushHandle[index].config.type) {
+        capture_frame = nv21toyuv420sp(index, (unsigned char *)yuv420, width, height);
+    } else {
+        capture_frame.pu8Y = (unsigned char *)yuv420;
+        capture_frame.pu8U = (unsigned char *)yuv420 + width * height;
+        capture_frame.pu8V = (unsigned char *)yuv420 + width * height * 5 / 4;
+        capture_frame.strideY = (unsigned int)width;
+        capture_frame.strideU = (unsigned int)width / 2;
+        capture_frame.strideV = (unsigned int)width / 2;
+    }
+    return evils_live_send_yuv(index, capture_frame);
+}
+
 
 int evils_live_send_aac(long handle, char *frame, int frame_len)
 {
