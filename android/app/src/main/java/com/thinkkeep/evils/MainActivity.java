@@ -192,6 +192,7 @@ public class MainActivity extends AppCompatActivity
 
     private void start() {
         builder = EvilsLiveStreamerConfig.Builder.newBuilder();
+        //builder.setVideoResolution(Defines.EvideoResolution.E720P);
         builder.setCameraFacing(Defines.EcameraFacing.CAMERA_FACING_BACK);
         EvilsLiveStreamerConfig config = builder.build();
         streamer.setDisplayPreview(mPreviewView);
