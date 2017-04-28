@@ -48,7 +48,7 @@ public class EvilsLiveStreamerConfig {
         this.streamUrl = builder.streamUrl;
         this.encodeMethod = builder.encodeMethod;
         this.imageFormat = builder.imageFormat;
-        this.videoresolution = builder.videoresolution;
+        this.videoresolution = builder.videoResolution;
         this.previewFrameRate = builder.previewFrameRate;
         this.encodeFrameRate = builder.encodeFrameRate;
         this.cameraFacing = builder.cameraFacing;
@@ -116,7 +116,7 @@ public class EvilsLiveStreamerConfig {
 
         private Defines.EencodeMethod encodeMethod;
 
-        private Defines.EvideoResolution videoresolution;
+        private Defines.EvideoResolution videoResolution;
 
         private int imageFormat;
 
@@ -179,6 +179,14 @@ public class EvilsLiveStreamerConfig {
             this.cameraFacing = cameraFacing;
         }
 
+        /**
+         * 设置分辨率
+         * @param videoResolution 分辨率
+         */
+        public void setVideoResolution(Defines.EvideoResolution videoResolution) {
+            this.videoResolution = videoResolution;
+        }
+
         public EvilsLiveStreamerConfig build() {
             return new EvilsLiveStreamerConfig(this);
         }
@@ -193,7 +201,7 @@ public class EvilsLiveStreamerConfig {
         Builder builder = new Builder();
         builder.streamUrl = DEFAULT_INSTANCE.streamUrl;
         builder.encodeMethod = DEFAULT_INSTANCE.encodeMethod;
-        builder.videoresolution = DEFAULT_INSTANCE.videoresolution;
+        builder.videoResolution = DEFAULT_INSTANCE.videoresolution;
         builder.imageFormat = DEFAULT_INSTANCE.imageFormat;
         builder.previewFrameRate = DEFAULT_INSTANCE.previewFrameRate;
         builder.encodeFrameRate = DEFAULT_INSTANCE.encodeFrameRate;

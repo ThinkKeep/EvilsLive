@@ -29,7 +29,7 @@ public class Defines {
         E640P(640, 480),
         E480P(858, 480),
         E540P(960, 540),
-        E720P(1080, 720),
+        E720P(1280, 720),
         ;
         private final int width;
         private final int height;

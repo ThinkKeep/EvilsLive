@@ -28,7 +28,7 @@ public class CameraModule {
 //            return new CameraNew(context);
 //        } else {
         JniManager.getInstance().init();
-            return new CameraOld();
+            return new CameraOld(context);
 //        }
     }
 }

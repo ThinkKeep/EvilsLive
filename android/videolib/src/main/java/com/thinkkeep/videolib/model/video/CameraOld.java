@@ -1,17 +1,25 @@
 package com.thinkkeep.videolib.model.video;
 
+import android.content.Context;
 import android.graphics.ImageFormat;
+import android.graphics.Point;
 import android.hardware.Camera;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 
 import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
 import com.thinkkeep.videolib.jni.EvilsLiveJni;
-import com.thinkkeep.videolib.util.Defines;
 import com.thinkkeep.videolib.jni.JniManager;
+import com.thinkkeep.videolib.util.Defines;
 
 import java.util.List;
 
@@ -25,12 +33,18 @@ public class CameraOld implements CameraSupport {
 
     private static final String TAG = CameraOld.class.getName();
     private static final int DEFAULT_IMAGE_FORMAT = ImageFormat.NV21;
+    private final Context context;
     private Camera camera;
 
     private OnPreviewFrameListener listener;
     private Size size;
     private int cameraId;
     private boolean isStartStream;
+    private boolean mShouldScaleToFill = false;
+
+    public CameraOld(Context context) {
+        this.context = context;
+    }
 
 
     public static final class Size {
@@ -142,15 +156,10 @@ public class CameraOld implements CameraSupport {
             Camera.Parameters parameters = setParameters();
             camera.setParameters(parameters);
             if (surfaceView != null) {
-                Camera.Size previewSize = parameters.getPreviewSize();
-                int previewWidth = previewSize.width;
-                int previewHeight = previewSize.height;
-                //fixed 预览画面中物体被拉伸变形, 因为旋转90度
-                ViewGroup.LayoutParams layoutParams = surfaceView.getLayoutParams();
-                layoutParams.width = previewHeight;
-                layoutParams.height = previewWidth;
+                final Camera.Size previewSize = parameters.getPreviewSize();
+                runMainHanlder(previewSize);
                 SurfaceHolder surfaceHolder = surfaceView.getHolder();
-                surfaceHolder.setSizeFromLayout();
+//                surfaceHolder.setSizeFromLayout();
                 //设置分辨率
 //                surfaceHolder.setFixedSize(previewWidth, previewHeight);
 //                surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -162,6 +171,109 @@ public class CameraOld implements CameraSupport {
         } catch (Exception e) {
             Log.e(TAG, "startPreview: error" + Log.getStackTraceString(e));
         }
+    }
+
+    private void runMainHanlder(final Camera.Size previewSize) {
+        Handler mainHanlder = new Handler(Looper.getMainLooper());
+        mainHanlder.post(new Runnable() {
+            @Override
+            public void run() {
+                adjustViewSize(previewSize);
+            }
+        });
+    }
+
+    private void adjustViewSize(Camera.Size cameraSize) {
+        Point previewSize = convertSizeToLandscapeOrientation(new Point(surfaceView.getWidth(), surfaceView.getHeight()));
+        float cameraRatio = ((float) cameraSize.width) / cameraSize.height;
+        float screenRatio = ((float) previewSize.x) / previewSize.y;
+
+//        Log.e(TAG, "adjustViewSize: cameraRatio: hujd " + cameraRatio + " screenRatio: " + screenRatio + " " + previewSize.x + previewSize.y);
+        if (screenRatio > cameraRatio) {
+            setViewSize((int) (previewSize.y * cameraRatio), previewSize.y);
+        } else {
+            setViewSize(previewSize.x, (int) (previewSize.x / cameraRatio));
+        }
+    }
+
+    @SuppressWarnings("SuspiciousNameCombination")
+    private Point convertSizeToLandscapeOrientation(Point size) {
+        if (getDisplayOrientation() % 180 == 0) {
+            return size;
+        } else {
+            return new Point(size.y, size.x);
+        }
+    }
+
+    @SuppressWarnings("SuspiciousNameCombination")
+    private void setViewSize(int width, int height) {
+        ViewGroup.LayoutParams layoutParams = surfaceView.getLayoutParams();
+        int tmpWidth;
+        int tmpHeight;
+        if (getDisplayOrientation() % 180 == 0) {
+            tmpWidth = width;
+            tmpHeight = height;
+        } else {
+            tmpWidth = height;
+            tmpHeight = width;
+        }
+
+        if (mShouldScaleToFill) {
+            int parentWidth = ((View) surfaceView.getParent()).getWidth();
+            int parentHeight = ((View) surfaceView.getParent()).getHeight();
+            float ratioWidth = (float) parentWidth / (float) tmpWidth;
+            float ratioHeight = (float) parentHeight / (float) tmpHeight;
+
+            float compensation;
+
+            if (ratioWidth > ratioHeight) {
+                compensation = ratioWidth;
+            } else {
+                compensation = ratioHeight;
+            }
+
+            tmpWidth = Math.round(tmpWidth * compensation);
+            tmpHeight = Math.round(tmpHeight * compensation);
+        }
+
+        layoutParams.width = tmpWidth;
+        layoutParams.height = tmpHeight;
+        surfaceView.setLayoutParams(layoutParams);
+    }
+
+    public int getDisplayOrientation() {
+        if (camera == null) {
+            //If we don't have a camera set there is no orientation so return dummy value
+            return 0;
+        }
+
+        Camera.CameraInfo info = new Camera.CameraInfo();
+        if(cameraId == -1) {
+            Camera.getCameraInfo(Camera.CameraInfo.CAMERA_FACING_BACK, info);
+        } else {
+            Camera.getCameraInfo(cameraId, info);
+        }
+
+        WindowManager wm = (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+
+        int rotation = display.getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0: degrees = 0; break;
+            case Surface.ROTATION_90: degrees = 90; break;
+            case Surface.ROTATION_180: degrees = 180; break;
+            case Surface.ROTATION_270: degrees = 270; break;
+        }
+
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;  // compensate the mirror
+        } else {  // back-facing
+            result = (info.orientation - degrees + 360) % 360;
+        }
+        return result;
     }
 
     @NonNull
@@ -179,7 +291,7 @@ public class CameraOld implements CameraSupport {
         parameters.setRotation(90);
 
         parameters.setPreviewSize(size.width, size.height);
-        parameters.setPictureSize(size.width, size.height);
+//        parameters.setPictureSize(size.width, size.height);
 
         int imageFormat = chooseImageFormat(parameters);
 
@@ -236,6 +348,7 @@ public class CameraOld implements CameraSupport {
             List<Camera.Size> sizeList = parameters.getSupportedPreviewSizes();
             Camera.Size optimalSize = getOptimalSize(sizeList,  Math.max(width, height), Math.min(width, height));
             size = new Size(optimalSize.width, optimalSize.height);
+//            Log.e(TAG, "choosePreviewSize: hujd width: " + size.width + " height: " + size.height);
         }
         if (size == null) {
             size = new Size(Defines.EvideoResolution.E640P.getWidth(), Defines.EvideoResolution.E640P.getHeight());
@@ -256,13 +369,13 @@ public class CameraOld implements CameraSupport {
         int targetHeight = height;
 
         for (Camera.Size size : sizes) {
-            double ratio = (double) size.width /size.height;
+            double ratio = (double) size.height / size.width;
             if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE ) {
                 continue;
             }
             if (Math.abs(size.height - targetHeight) < minDiff) {
                 optimalSize = size;
-                minDiff = Math.abs(size.height = targetHeight);
+                minDiff = Math.abs(size.height - targetHeight);
             }
         }
 
