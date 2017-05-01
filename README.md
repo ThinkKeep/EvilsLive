@@ -49,6 +49,29 @@ Android API >= 19
 **Step 2:**
 
 具体如何使用可以参照 [app](https://github.com/ThinkKeep/EvilsLive/tree/master/android/app) 中的代码
+```java
+builder = EvilsLiveStreamerConfig.Builder.newBuilder();
+//设置分辨率
+builder.setVideoResolution(Defines.EvideoResolution.E720P);
+//设置摄像头方向
+builder.setCameraFacing(Defines.EcameraFacing.CAMERA_FACING_BACK);
+//设置视频预览帧率
+builder.setPreviewFrameRate(25);
+//设置推流url
+builder.setStreamUrl(url);
+EvilsLiveStreamerConfig config = builder.build();
+//设置预览视图
+streamer.setDisplayPreview(mPreviewView);
+streamer.setStreamConfig(config);
+//停止预览
+streamer.stopPreview();
+//开启预览
+streamer.startPreview();
+//开启推流
+streamer.startStream();
+//停止推流
+streamer.stopStream();
+```
 
 **测试环境：**
 
