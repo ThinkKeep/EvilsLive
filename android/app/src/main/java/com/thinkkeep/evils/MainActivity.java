@@ -31,6 +31,7 @@ import com.thinkkeep.videolib.model.audio.AudioCapture;
 import com.thinkkeep.videolib.model.audio.AudioPlayer;
 import com.thinkkeep.videolib.model.video.CameraSupport;
 import com.thinkkeep.videolib.util.Defines;
+import com.thinkkeep.videolib.util.LogUtils;
 
 import javax.inject.Inject;
 

@@ -20,6 +20,7 @@ import com.thinkkeep.videolib.api.EvilsLiveStreamerConfig;
 import com.thinkkeep.videolib.jni.EvilsLiveJni;
 import com.thinkkeep.videolib.jni.JniManager;
 import com.thinkkeep.videolib.util.Defines;
+import com.thinkkeep.videolib.util.LogUtils;
 
 import java.util.List;
 
@@ -260,10 +261,18 @@ public class CameraOld implements CameraSupport {
         int rotation = display.getRotation();
         int degrees = 0;
         switch (rotation) {
-            case Surface.ROTATION_0: degrees = 0; break;
-            case Surface.ROTATION_90: degrees = 90; break;
-            case Surface.ROTATION_180: degrees = 180; break;
-            case Surface.ROTATION_270: degrees = 270; break;
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
         }
 
         int result;
@@ -327,7 +336,7 @@ public class CameraOld implements CameraSupport {
 
         List<Integer> list = parameters.getSupportedPreviewFormats();
         for (Integer val : list) {
-            Log.e(TAG, "startPreview: val: " + val);
+            LogUtils.e(TAG, "hujd startPreview: val: " + val);
             if (val == config.getImageFormat()) {
                 return val;
             }
